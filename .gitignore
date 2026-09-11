@@ -136,3 +136,4 @@ docs/research/
 # the video and the poster frame regenerate from the tape in one command.
 assets/quickstart.mp4
 assets/quickstart-poster.png
+assets/build_benchcharts.py
