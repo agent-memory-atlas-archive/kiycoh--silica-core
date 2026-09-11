@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -58,8 +59,25 @@ def test_setup_claude_writes_its_block_once(tmp_path, monkeypatch):
     assert g.write_guidance(path) == "appended" and path.read_text().startswith("# only mine\n\n" + g.START)
 
 
+CAP = 1500  # a drift stop, not a measured cliff: 1,047 and 2,046 chars measured at parity (2026-09-11 A/B, 120 runs)
+
+
 def test_search_description_opens_with_the_ask_and_fits():
     from silica.ui.mcp import exposed_tools
     d = exposed_tools(False)["silica_search"].description
     assert d.startswith("For a question that names no identifier") and "Do not grep for the words of a question" in d
-    assert len(d) < 2048
+    assert len(d) < CAP, f"silica_search description is {len(d)} chars, over the {CAP} cap by {len(d) - CAP + 1}"
+
+
+def test_no_contract_surface_says_blocked():
+    """A bare "blocked" reads as a policy restriction and the model gives
+    up instead of taking the alternative (context-mode ADR-0003: 6/6
+    capitulations with it, 0/6 with "redirected"). The one token with a
+    measured cost; the list grows only with a number of its own."""
+    from silica.onboarding.guidance import GUIDANCE
+    from silica.ui.mcp import exposed_tools
+    surfaces = {name: t.description for name, t in exposed_tools(False).items()}
+    surfaces["hook"] = _hook().LINE
+    surfaces["guidance"] = GUIDANCE
+    for name, text in surfaces.items():
+        assert not re.search(r"\bblocked\b", text, re.I), f"{name} says 'blocked'"

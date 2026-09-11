@@ -686,32 +686,17 @@ def silica_search(
     passages and, in a source tree, the functions, methods, classes and
     constants themselves, by the question's words and their vectors.
     Do not grep for the words of a question; grep
-    for an exact string or a symbol name you already know. Ranked passages
-    with an honest zero: BM25 over documents, then over the heading sections
-    of the top documents, at most `per_doc` per document; each hit carries
-    its densest `width`-char window and line. A PDF's section is a page, so
+    for an exact string or a symbol name you already know. Each hit carries
+    its densest `width`-char window and line; a PDF's section is a page, so
     on a PDF hit widen `width` (1200-1500) rather than reading the page.
-    `score` is raw BM25 (comparable within one call only). `matched_terms`
-    are the query terms in the hit; `coverage` is the share of the query's
-    idf mass they carry, absent terms included at the weight of a term found
-    nowhere (near 1 = every rare term matched, near 0 = only the common
-    words); `terms_absent` are query terms found nowhere in the corpus. No
-    boolean "no answer" exists: read coverage and matched_terms
-    and decide to stop or rephrase. The dense leg (one vector per section)
-    runs once the vectors are built (the server's warm-up, or `silica index
-    --embed`): `dense` in the reply says `ready` and how many documents it
-    covered, or why not (`off`, `warming`, `no_vectors`, `consent_required`,
-    `failed`) while the search stayed lexical; the user's to fix, not the
-    caller's. With
-    `queries` or the dense leg the order is by reciprocal rank across the
-    groups (and the vectors); `score`, `matched_terms` and `coverage` then
-    read over all the groups' terms, and a hit the dense leg alone found
-    carries `dense` and coverage 0. In a source tree (vault.yaml `sources`;
-    a git repository by default) source files are indexed one unit per
-    function, method, class or constant (line windows where no parser
-    applies), ranked beside the notes: a hit's `section` is the symbol,
-    `span` its lines, and `silica_read(path, section=<symbol>)` serves its
-    body. Builds the index on first use."""
+    `matched_terms` are the query terms in the hit; `coverage` is the share
+    of the query's idf mass they carry (near 1 = every rare term matched,
+    near 0 = only the common words); `terms_absent` are query terms found
+    nowhere in the corpus. No boolean "no answer" exists: read coverage and
+    matched_terms and decide to stop or rephrase. A hit the dense leg alone
+    found carries `dense` and coverage 0. In a source tree a hit's `section`
+    is the symbol, `span` its lines, and `silica_read(path,
+    section=<symbol>)` serves its body."""
     from silica import embeddings
     live = _notes()
     # A local-hybrid warm-up over a folder nothing has indexed yet: wait for

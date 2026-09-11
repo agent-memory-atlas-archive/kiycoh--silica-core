@@ -196,6 +196,17 @@ morning's grep-and-reads arm the judge is +15.4 (+3.3 to +28.6). In the same
 grid zvec-grep's MCP search, with the guidance `zg install` writes, was
 chosen once in its 20 runs.
 
+**Half the description, the same ask.** The description above ran at 2,046
+characters; on 2026-09-11 a copy cut to 1,047 by deletion alone (the
+opener and the grep sentence kept, the ranking internals `TOOLS.md` already
+records dropped) ran against it with nothing else changed: same hook, same
+guidance block, same server instructions, the same 20 questions, Sonnet at
+medium effort, three repetitions, judged blind. The search ran in 50 of 60
+runs in both arms; paired, cost -$0.001 (-0.012 to +0.012), turns +0.25
+(-0.47 to +0.98), judge +2.1 (-5.2 to +9.7), 22 wins and 26 losses. The
+short text is the one served now, and the test that guards the description
+caps it at 1,500 characters.
+
 ## What the harness measurements say
 
 Leave the choice to the harness. Measured with Opus on 2026-09-09, 144 runs,
