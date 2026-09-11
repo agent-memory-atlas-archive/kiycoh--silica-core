@@ -653,6 +653,15 @@ def _sections_of(key: str) -> tuple[str, list[tuple[int, str, Counter, int, str]
             parts = [(off, part, part.splitlines()[0].lstrip("#").strip() if part.startswith("#") else "")
                      for off, part in _split(text)]
         secs = []
+        # The tf is the body's. A code unit's title — the qualified symbol —
+        # is a field the document stage reads (the index upserts it as the
+        # unit's name) and this stage does not. Weighting it was measured on
+        # 2026-09-11 over the 32 offline code questions and REFUTED: extra
+        # title mass here (weights 1, 2, 3, 5, 8), at the document stage
+        # (weight 3, rebuilt) and at both, lexical and hybrid, left every
+        # paired interval across zero, and the section-stage arms traded file
+        # recall for symbol precision without either clearing it.
+        # docs/baseline/2026-09-11-title-boost.md.
         for off, part, title in parts:
             tf = Counter(_tokens(part))
             secs.append((off, part, tf, sum(tf.values()), title))
