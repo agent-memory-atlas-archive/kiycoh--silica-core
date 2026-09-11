@@ -41,9 +41,9 @@ Score the candidate from 0 to 100 for how much of the reference's substance it s
 Reply with one JSON object and nothing else: {{"score": <integer>, "missing": ["<what the candidate lacks, briefly>", ...], "wrong": ["<what it gets wrong>", ...]}}"""
 
 
-def judge(question: str, reference: str, answer: str, model: str) -> dict:
+def judge(question: str, reference: str, answer: str, model: str, effort: str = "") -> dict:
     p = subprocess.run(["claude", "-p", "--model", model, "--output-format", "json", "--no-session-persistence",
-                        "--max-turns", "1", "--tools", ""],
+                        "--max-turns", "1", "--tools", ""] + (["--effort", effort] if effort else []),
                        input=PROMPT.format(question=question, reference=reference, answer=answer or "(no answer)"),
                        capture_output=True, text=True, timeout=300)
     try:
@@ -61,6 +61,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("folder")
     ap.add_argument("--model", default="sonnet")
+    ap.add_argument("--effort", default="", help="claude --effort for the judge; empty = the client's default")
     a = ap.parse_args()
     folder = Path(a.folder)
     refs = {r["task_id"]: r["reference_answer"]
@@ -79,7 +80,7 @@ def main() -> int:
             key = (r["task"], r["arm"], r["rep"])
             if r["kind"] != "swe" or key in done or r["task"] not in refs or r.get("subtype") == "limit" or r["exit"]:
                 continue
-            v = judge(questions[r["task"]], refs[r["task"]], r["answer"], a.model)
+            v = judge(questions[r["task"]], refs[r["task"]], r["answer"], a.model, a.effort)
             row = {"task": r["task"], "arm": r["arm"], "rep": r["rep"], "judge": a.model, **v}
             done[key] = row
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")

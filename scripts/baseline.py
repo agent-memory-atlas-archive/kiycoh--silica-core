@@ -320,13 +320,14 @@ def write_manifest(out: Path, args: dict, tasks: list[dict]) -> Path:
 
 
 GUIDANCE_FILE = ""  # --guidance: appended to the system prompt of arms A and S, as arm Z gets zvec's
+EFFORT = ""  # --effort: the client's reasoning effort, every arm alike; empty leaves the client's default
 
 
 def command(arm: str, model: str, max_turns: int, budget: float,
             skills: bool = True, plugin_dir: str = "") -> list[str]:
     base = ["claude", "-p", "--model", model, "--max-turns", str(max_turns),
             "--max-budget-usd", str(budget), "--output-format", "stream-json", "--verbose",
-            "--no-session-persistence"] + ([] if skills else ["--disable-slash-commands"])
+            "--no-session-persistence"] + (["--effort", EFFORT] if EFFORT else []) + ([] if skills else ["--disable-slash-commands"])
     off = ["--settings", json.dumps({"enabledPlugins": {PLUGIN_KEY: False}})]
     if arm == "Z":
         return base + off + ["--mcp-config", ZG_MCP, "--allowedTools", ",".join(NATIVE_TOOLS + ZG_TOOLS)] + (
@@ -478,6 +479,7 @@ def main() -> int:
     ap.add_argument("--arms", default="A,B", help="any of A (plugin), S (plugin, code index on), B (no plugin), "
                     "Z (no plugin, zvec-grep MCP), F (forced), P (grep then code_pack)")
     ap.add_argument("--prepare", action="store_true", help="build both sides' indexes per task root first and record the seconds")
+    ap.add_argument("--effort", default="", help="claude --effort for every run (low, medium, high, xhigh, max); empty = the client's default")
     ap.add_argument("--guidance", default="", help="a file appended to the system prompt of arms A and S (the block silica setup claude writes)")
     ap.add_argument("--out", default="", help="results folder; default docs/baseline/<stamp>")
     ap.add_argument("--no-skills", action="store_true", help="disable every skill in both arms")
@@ -488,8 +490,9 @@ def main() -> int:
     if a.summary:
         print(summarize(Path(a.summary)))
         return 0
-    global GUIDANCE_FILE
+    global GUIDANCE_FILE, EFFORT
     GUIDANCE_FILE = str(Path(a.guidance).resolve()) if a.guidance else ""
+    EFFORT = a.effort
     out = Path(a.out) if a.out else REPO / "docs" / "baseline" / time.strftime("%Y-%m-%d-%H%M")
     out.mkdir(parents=True, exist_ok=True)
     runs = out / "runs.jsonl"
