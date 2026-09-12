@@ -49,8 +49,8 @@ UNIT_CHARS = 1500
 
 
 def _search(task: dict, k: int) -> tuple[list[dict], float]:
-    from silica.config import CONFIG
-    import silica.core as core
+    from silica_core.config import CONFIG
+    import silica_core.core as core
     CONFIG.vault_path = task["root"]
     CONFIG.index_code = True
     CONFIG.embedding_base_url = ""

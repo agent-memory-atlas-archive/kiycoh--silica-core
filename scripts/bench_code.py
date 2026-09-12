@@ -72,7 +72,7 @@ def spans(root: str, rel: str, lines: list[int]) -> list[tuple[int, int]]:
     """The symbol around each gold line (the innermost; the one opening within
     five lines below when the line is a comment above it), else 20 lines
     either side."""
-    from silica.kernel.code.codeunits import outline
+    from silica_core.kernel.code.codeunits import outline
     key = (root, rel)
     if key not in _outline_cache:
         text = (Path(root) / rel).read_text(encoding="utf-8", errors="replace")
@@ -113,8 +113,8 @@ def score(task: dict, hits: list[dict], k: int) -> dict:
 
 
 def silica_arm(task: dict, mode: str, k: int, per_doc: int) -> tuple[list[dict], int, float, dict]:
-    from silica.config import CONFIG
-    import silica.core as core
+    from silica_core.config import CONFIG
+    import silica_core.core as core
     CONFIG.vault_path = task["root"]
     CONFIG.index_code = True
     CONFIG.embedding_base_url = ""
@@ -122,7 +122,7 @@ def silica_arm(task: dict, mode: str, k: int, per_doc: int) -> tuple[list[dict],
     core._section_cache.clear()
     t0 = time.time()
     if mode == "dense":  # the vectors alone, a diagnostic: what the fusion adds or costs
-        from silica import embeddings
+        from silica_core import embeddings
         live = core._notes()
         _docs, secs = embeddings.rank(task["question"], live)
         ms = 1000 * (time.time() - t0)

@@ -7,7 +7,7 @@ The vault is mixed Italian/English: `references` and `références` must be one
 term. Identifier segmentation was measured on the bench corpus and left out;
 see `test_camel_case_is_not_segmented`.
 """
-from silica.kernel.recall.lexical import STOPWORDS, STOPWORDS_FOLDED, _fold, _tokens
+from silica_core.kernel.recall.lexical import STOPWORDS, STOPWORDS_FOLDED, _fold, _tokens
 
 
 def test_accents_fold_to_one_term():

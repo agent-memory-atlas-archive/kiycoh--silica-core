@@ -1,4 +1,4 @@
-from silica.kernel.link.ast import extract_links
+from silica_core.kernel.link.ast import extract_links
 
 def test_extract_links():
     content = """
@@ -28,7 +28,7 @@ def test_intra_note_anchors_are_not_note_links():
 
 
 def test_extract_links_typed_splits_scaffold_from_prose():
-    from silica.kernel.link.ast import extract_links, extract_links_typed
+    from silica_core.kernel.link.ast import extract_links, extract_links_typed
     content = (
         "---\n"
         "parent note: \"[[Hub]]\"\n"
@@ -45,7 +45,7 @@ def test_extract_links_typed_splits_scaffold_from_prose():
 
 
 def test_extract_links_typed_prose_wins_over_a_scaffold_mention():
-    from silica.kernel.link.ast import extract_links_typed
+    from silica_core.kernel.link.ast import extract_links_typed
     content = "---\nrelated:\n  - \"[[X]]\"\n---\n\nBody cites [[X]] in a sentence.\n"
     assert extract_links_typed(content) == {"X": False}
 

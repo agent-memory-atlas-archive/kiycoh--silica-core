@@ -24,7 +24,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-silica/_version.py
+silica_core/_version.py
 *.manifest
 *.spec
 pip-log.txt

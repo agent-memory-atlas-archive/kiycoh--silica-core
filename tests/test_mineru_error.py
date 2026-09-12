@@ -1,4 +1,4 @@
-from silica.sources.convert import _mineru_error
+from silica_core.sources.convert import _mineru_error
 
 
 def test_extracts_error_field_from_json_blob():

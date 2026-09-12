@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from silica import repl
+from silica_core import repl
 
 
 def _sse(*msgs):
@@ -26,14 +26,14 @@ def _sse(*msgs):
 
 @pytest.fixture
 def model(monkeypatch):
-    from silica.config import CONFIG
+    from silica_core.config import CONFIG
     monkeypatch.setattr(CONFIG, "model", "lmstudio/test-model")
     monkeypatch.setattr(CONFIG, "provider_base_url", "")
     monkeypatch.setattr(CONFIG, "provider_api_key", "")
 
 
 def test_endpoint_presets(monkeypatch, model):
-    from silica.config import CONFIG
+    from silica_core.config import CONFIG
     assert repl.endpoint() == ("test-model", "http://localhost:1234/v1", "lmstudio")
     monkeypatch.setattr(CONFIG, "model", "openrouter/deepseek/deepseek-chat")
     monkeypatch.setenv("OPENROUTER_API_KEY", "k")
@@ -72,7 +72,7 @@ def test_unknown_tool_is_an_error_result_not_a_crash(model):
 
 
 def test_repl_without_a_model_says_so(monkeypatch, capsys):
-    from silica.config import CONFIG
+    from silica_core.config import CONFIG
     monkeypatch.setattr(CONFIG, "model", "")
     assert repl.main() == 1
     assert "SILICA_MODEL" in capsys.readouterr().err

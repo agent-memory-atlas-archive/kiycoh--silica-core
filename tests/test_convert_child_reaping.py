@@ -51,7 +51,7 @@ def _alive(pid: int) -> bool:
 def test_a_conversion_child_dies_when_its_parent_is_killed():
     script = (
         f"import subprocess, sys; sys.path.insert(0, {REPO!r});\n"
-        "from silica.sources.convert import _REAP_WITH_PARENT\n"
+        "from silica_core.sources.convert import _REAP_WITH_PARENT\n"
         "print('up', flush=True)\n"
         "subprocess.run(['sleep', '60'], preexec_fn=_REAP_WITH_PARENT)\n"
     )

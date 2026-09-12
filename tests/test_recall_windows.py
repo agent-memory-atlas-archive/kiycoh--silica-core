@@ -12,7 +12,7 @@ answers), so the saving comes from the window count per rank instead.
 from __future__ import annotations
 
 
-from silica.kernel.recall.rerank import best_window_spans
+from silica_core.kernel.recall.rerank import best_window_spans
 
 LINES = [f"line {i:03d} filler words here" for i in range(60)]
 LINES[30] = "line 030 the yoga class is on tuesday evening"
@@ -34,8 +34,8 @@ def test_snap_moves_the_offset_to_the_previous_line_start():
 
 
 def _perceive_with(monkeypatch, bodies: list[str], query: str, k: int, **kw):
-    from silica.kernel.recall import perception
-    from silica.kernel.recall.relatedness import RelatedNote
+    from silica_core.kernel.recall import perception
+    from silica_core.kernel.recall.relatedness import RelatedNote
 
     results = [RelatedNote(path=f"n{i}", name=f"n{i}", score=1.0 - i / 100, evidence=["cooccur:w1"])
                for i in range(len(bodies))]

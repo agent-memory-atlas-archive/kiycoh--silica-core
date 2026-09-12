@@ -35,14 +35,14 @@ from pathlib import Path
 
 import pytest
 
-import silica.cli  # noqa: F401  registers every tool module
-from silica.tools import TOOLS
+import silica_core.cli  # noqa: F401  registers every tool module
+from silica_core.tools import TOOLS
 
-SILICA_ROOT = Path(__file__).resolve().parent.parent / "silica"
+SILICA_ROOT = Path(__file__).resolve().parent.parent / "silica_core"
 
 
 def _tool_names() -> set[str]:
-    assert TOOLS, "importing silica.cli must populate the registry"
+    assert TOOLS, "importing silica_core.cli must populate the registry"
     return set(TOOLS)
 
 
@@ -72,7 +72,7 @@ def _string_tuples(node: ast.AST) -> list[list[str]]:
 
 
 def _declared_tool_names() -> list[tuple[str, int, str]]:
-    """Every (file, line, name) from a literal `tools=` keyword under silica/."""
+    """Every (file, line, name) from a literal `tools=` keyword under silica_core/."""
     found: list[tuple[str, int, str]] = []
     for path in sorted(SILICA_ROOT.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))

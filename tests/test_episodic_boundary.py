@@ -17,12 +17,12 @@ from pathlib import Path
 
 import pytest
 
-SILICA_ROOT = Path(__file__).resolve().parent.parent / "silica"
+SILICA_ROOT = Path(__file__).resolve().parent.parent / "silica_core"
 
 _EPISODIC_IMPORT_RE = re.compile(
-    r"from silica\.kernel\.recall\.episodic import|"
-    r"import silica\.kernel\.recall\.episodic\b|"
-    r"from silica\.kernel\.recall import [^\n]*\bepisodic\b"
+    r"from silica_core\.kernel\.recall\.episodic import|"
+    r"import silica_core\.kernel\.recall\.episodic\b|"
+    r"from silica_core\.kernel\.recall import [^\n]*\bepisodic\b"
 )
 
 # The store is out of scope — it IS the implementation.
@@ -66,15 +66,15 @@ def test_episodic_imports_are_allowlisted():
 
 
 def _bind(vault: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    import silica.driver
-    import silica.kernel.recall.cooccurrence as cooc_mod
-    import silica.kernel.recall.embed as embed_mod
-    from silica.config import CONFIG
+    import silica_core.driver
+    import silica_core.kernel.recall.cooccurrence as cooc_mod
+    import silica_core.kernel.recall.embed as embed_mod
+    from silica_core.config import CONFIG
 
     vault.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(CONFIG, "vault_path", str(vault))
     monkeypatch.setattr(CONFIG, "memory_vault", str(vault))
-    monkeypatch.setattr(silica.driver, "_driver", None)
+    monkeypatch.setattr(silica_core.driver, "_driver", None)
     embed_mod.clear()
     cooc_mod.clear()
 

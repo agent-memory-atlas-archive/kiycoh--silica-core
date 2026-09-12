@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import pytest
 
-from silica.kernel.code.codeunits import units
-from silica.kernel.recall.lexical import _tokens
+from silica_core.kernel.code.codeunits import units
+from silica_core.kernel.recall.lexical import _tokens
 
 SRC = '''"""The store."""
 import os
@@ -57,8 +57,8 @@ def test_identifiers_are_indexed_whole_and_in_pieces():
 
 @pytest.fixture
 def root(tmp_path, monkeypatch):
-    from silica.config import CONFIG
-    from silica.kernel.recall import paths
+    from silica_core.config import CONFIG
+    from silica_core.kernel.recall import paths
 
     (tmp_path / "pkg").mkdir()
     (tmp_path / "pkg" / "store.py").write_text(SRC, encoding="utf-8")
@@ -67,7 +67,7 @@ def root(tmp_path, monkeypatch):
     monkeypatch.setattr(CONFIG, "vault_path", str(tmp_path))
     monkeypatch.setattr(CONFIG, "index_code", True)
     monkeypatch.setattr(paths, "index_dir_for", lambda vault, _d=tmp_path / ".idx": _d)
-    import silica.core as core
+    import silica_core.core as core
     core._section_cache.clear()
     return core
 
@@ -103,20 +103,20 @@ def test_an_edit_replaces_the_units(root, tmp_path):
     r = root.search("purge")
     assert r["hits"] == [] and r["terms_absent"] == ["purge"]
     assert root.search("wipe")["hits"][0]["section"] == "UserStore.wipe"
-    from silica.kernel.recall.lexical import get_store
+    from silica_core.kernel.recall.lexical import get_store
     assert all(not k.startswith("pkg/store.py#") or k in root._load_meta()["units"]["pkg/store.py"]
                for k in get_store(root.INDEX).paths())
 
 
 def test_the_switch_off_keeps_code_out(root, monkeypatch):
-    from silica.config import CONFIG
+    from silica_core.config import CONFIG
     monkeypatch.setattr(CONFIG, "index_code", False)
     r = root.search("getUserProfile")  # the note still answers through the words of the name
     assert {h["path"] for h in r["hits"]} == {"notes.md"} and r["scope"]["docs"] == 1
 
 
 def test_a_txt_note_is_prose_without_the_code_lane(root, monkeypatch, tmp_path):
-    from silica.config import CONFIG
+    from silica_core.config import CONFIG
     monkeypatch.setattr(CONFIG, "index_code", False)
     (tmp_path / "readme.txt").write_text("Leveled compaction merges sorted runs level by level.\n", encoding="utf-8")
     assert root.search("leveled compaction")["hits"][0]["path"] == "readme.txt"
@@ -127,12 +127,12 @@ def test_a_txt_note_is_prose_without_the_code_lane(root, monkeypatch, tmp_path):
 def test_a_txt_never_becomes_a_code_unit(root, tmp_path):
     (tmp_path / "readme.txt").write_text("Leveled compaction merges sorted runs level by level.\n", encoding="utf-8")
     assert root.search("leveled compaction")["hits"][0]["path"] == "readme.txt"
-    from silica.kernel.recall.lexical import get_store
+    from silica_core.kernel.recall.lexical import get_store
     assert "readme.txt" in get_store(root.INDEX).paths()  # one prose document, not `readme.txt#0` windows
 
 
 def test_config_files_enter_only_with_the_code_lane(root, monkeypatch, tmp_path):
-    from silica.config import CONFIG
+    from silica_core.config import CONFIG
     (tmp_path / "settings.yaml").write_text("compaction: leveled\nlevels: 7\n", encoding="utf-8")
     assert root.search("compaction leveled")["hits"][0]["path"] == "settings.yaml"
     monkeypatch.setattr(CONFIG, "index_code", False)

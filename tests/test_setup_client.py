@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from silica.onboarding import setup_client
+from silica_core.onboarding import setup_client
 
 
 @pytest.fixture(autouse=True)

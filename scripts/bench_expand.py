@@ -157,7 +157,7 @@ def expand(adj: Adj, anchors: list[Node], hops: int, per_type: int) -> dict[Node
 
 
 def _tokens(s: str) -> set[str]:
-    import silica.core as core
+    import silica_core.core as core
     return set(core._tokens(s))
 
 
@@ -259,8 +259,8 @@ def main() -> int:
     ap.add_argument("--only", default="")
     ap.add_argument("--tag", default="")
     a = ap.parse_args()
-    from silica.config import CONFIG
-    from silica.kernel.code.codegraph import load_codegraph
+    from silica_core.config import CONFIG
+    from silica_core.kernel.code.codegraph import load_codegraph
     tasks = bc.load_tasks(a.tasks)
     if a.only:
         tasks = [t for t in tasks if t["id"] in a.only.split(",")]

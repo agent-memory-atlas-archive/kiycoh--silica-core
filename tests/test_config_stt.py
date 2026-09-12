@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from silica.config import SilicaConfig
+from silica_core.config import SilicaConfig
 
 _KEYS = (
     "SILICA_STT_BASE_URL", "SILICA_ASR_BASE_URL",
@@ -60,8 +60,8 @@ def test_auto_language_is_omitted_on_the_convert_lane(clean_env, monkeypatch, tm
     """The two lanes spell "let the server detect" differently: dictation sends
     language=auto, /convert omits the field. One config value, both behaviours
     preserved."""
-    from silica.config import CONFIG
-    import silica.sources.convert as conv
+    from silica_core.config import CONFIG
+    import silica_core.sources.convert as conv
 
     seen: dict = {}
 

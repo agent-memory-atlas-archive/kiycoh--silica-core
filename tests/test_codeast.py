@@ -1,12 +1,12 @@
 """kernel/codeast — shallow tree-sitter skeleton extraction (ADR-0012 slice)."""
-from silica.kernel.code.codeast import EXTENSION_MAP, ModuleSkeleton, extract_skeleton, language_for
+from silica_core.kernel.code.codeast import EXTENSION_MAP, ModuleSkeleton, extract_skeleton, language_for
 
 PY_SRC = '''\
 """Module docstring."""
 import os
-import silica.kernel.code.gitstate
+import silica_core.kernel.code.gitstate
 from pathlib import Path
-from silica.kernel.write import frontmatter
+from silica_core.kernel.write import frontmatter
 
 
 def hi(name: str) -> str:
@@ -62,9 +62,9 @@ def test_python_imports():
     sk = extract_skeleton(PY_SRC, "python", path="src/m.py")
     assert isinstance(sk, ModuleSkeleton)
     assert "os" in sk.imports
-    assert "silica.kernel.code.gitstate" in sk.imports
+    assert "silica_core.kernel.code.gitstate" in sk.imports
     assert "pathlib.Path" in sk.imports               # was: "pathlib"
-    assert "silica.kernel.write.frontmatter" in sk.imports  # was: "silica.kernel"
+    assert "silica_core.kernel.write.frontmatter" in sk.imports  # was: "silica_core.kernel"
 
 
 def test_python_symbols_signatures_and_docstrings():
@@ -138,8 +138,8 @@ def test_javascript_smoke():
 
 
 FROM_IMPORTS = '''\
-from silica.kernel.write import frontmatter
-from silica.kernel.code import gitstate
+from silica_core.kernel.write import frontmatter
+from silica_core.kernel.code import gitstate
 from pathlib import Path
 from .paths import atomic_write_bytes
 from . import helpers
@@ -149,8 +149,8 @@ from os import *
 
 def test_from_import_records_module_dot_name():
     sk = extract_skeleton(FROM_IMPORTS, "python", path="src/m.py")
-    assert "silica.kernel.write.frontmatter" in sk.imports
-    assert "silica.kernel.code.gitstate" in sk.imports
+    assert "silica_core.kernel.write.frontmatter" in sk.imports
+    assert "silica_core.kernel.code.gitstate" in sk.imports
     assert "pathlib.Path" in sk.imports
     assert ".paths.atomic_write_bytes" in sk.imports
     assert ".helpers" in sk.imports        # `from . import helpers`
@@ -167,12 +167,12 @@ def test_parse_error_flag():
 def test_diff_skeletons_empty_for_body_only_change():
     old = extract_skeleton("def hi(name: str) -> str:\n    return name\n", "python")
     new = extract_skeleton("def hi(name: str) -> str:\n    x = name.upper()\n    return x\n", "python")
-    from silica.kernel.code.codeast import diff_skeletons
+    from silica_core.kernel.code.codeast import diff_skeletons
     assert diff_skeletons(old, new) == []
 
 
 def test_diff_skeletons_reports_structure():
-    from silica.kernel.code.codeast import diff_skeletons
+    from silica_core.kernel.code.codeast import diff_skeletons
     old = extract_skeleton(
         "import os\n\nclass A:\n    def run(self) -> None: ...\n\ndef gone(): ...\n", "python")
     new = extract_skeleton(
@@ -318,7 +318,7 @@ def test_from_import_alias_recorded():
 # ---------------------------------------------------------------------------
 
 def test_bare_language_extensions_mapped():
-    from silica.kernel.code.codeast import BARE_LANGUAGES
+    from silica_core.kernel.code.codeast import BARE_LANGUAGES
     assert BARE_LANGUAGES == {"toml", "html", "css"}
     assert language_for("pyproject.toml") == "toml"
     assert language_for("site/index.html") == "html"
@@ -571,47 +571,47 @@ def test_cpp_header_guard_is_transparent():
 DEFERRED_SRC = '''\
 """Module with the deferred-import idiom."""
 import os
-from silica.kernel.write import frontmatter
+from silica_core.kernel.write import frontmatter
 
 if TYPE_CHECKING:
-    from silica.kernel.write.ops import InverseOp
+    from silica_core.kernel.write.ops import InverseOp
 
 
 def commit():
-    from silica.kernel.workqueue import path_lease
+    from silica_core.kernel.workqueue import path_lease
     with path_lease("x"):
         pass
 
 
 class Runner:
     def run(self):
-        from silica.kernel.code.codeast import python as _py
+        from silica_core.kernel.code.codeast import python as _py
         return _py.walk()
 '''
 
 
 def test_deferred_imports_are_captured_apart_from_top_level():
     sk = extract_skeleton(DEFERRED_SRC, "python", path="src/m.py")
-    assert sk.imports == ["os", "silica.kernel.write.frontmatter"]
-    assert "silica.kernel.workqueue.path_lease" in sk.deferred_imports
-    assert "silica.kernel.code.codeast.python" in sk.deferred_imports
-    assert "silica.kernel.write.ops.InverseOp" in sk.deferred_imports   # TYPE_CHECKING guard
+    assert sk.imports == ["os", "silica_core.kernel.write.frontmatter"]
+    assert "silica_core.kernel.workqueue.path_lease" in sk.deferred_imports
+    assert "silica_core.kernel.code.codeast.python" in sk.deferred_imports
+    assert "silica_core.kernel.write.ops.InverseOp" in sk.deferred_imports   # TYPE_CHECKING guard
     # top-level ones never leak into the deferred bucket
-    assert not any(m in sk.deferred_imports for m in ("os", "silica.kernel.write.frontmatter"))
+    assert not any(m in sk.deferred_imports for m in ("os", "silica_core.kernel.write.frontmatter"))
 
 
 def test_deferred_import_alias_resolves_calls():
     sk = extract_skeleton(DEFERRED_SRC, "python", path="src/m.py")
-    assert sk.import_aliases["_py"] == "silica.kernel.code.codeast.python"
+    assert sk.import_aliases["_py"] == "silica_core.kernel.code.codeast.python"
 
 
 def test_deferred_import_change_is_structural():
-    from silica.kernel.code.codeast import diff_skeletons
+    from silica_core.kernel.code.codeast import diff_skeletons
     old = extract_skeleton(DEFERRED_SRC, "python", path="src/m.py")
     new = extract_skeleton(DEFERRED_SRC.replace(
-        "from silica.kernel.workqueue import path_lease",
-        "from silica.kernel.write.ledger import path_lease"), "python", path="src/m.py")
-    assert any("silica.kernel.write.ledger.path_lease" in d for d in diff_skeletons(old, new))
+        "from silica_core.kernel.workqueue import path_lease",
+        "from silica_core.kernel.write.ledger import path_lease"), "python", path="src/m.py")
+    assert any("silica_core.kernel.write.ledger.path_lease" in d for d in diff_skeletons(old, new))
 
 
 NOISY_SRC = '''\

@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from silica.kernel.recall.paths import atomic_write_bytes
+from silica_core.kernel.recall.paths import atomic_write_bytes
 
 
 def test_write_and_overwrite(tmp_path):

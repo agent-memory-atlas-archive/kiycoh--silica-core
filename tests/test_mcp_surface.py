@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from silica.ui.mcp import CORE_TOOLS, exposed_tools
+from silica_core.ui.mcp import CORE_TOOLS, exposed_tools
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -28,7 +28,7 @@ def test_core_tools_resolve_and_are_agent_visible():
 
 
 def test_write_tools_are_additive_and_reads_are_idempotent():
-    from silica.ui.mcp import WRITE_TOOLS, tool_annotations
+    from silica_core.ui.mcp import WRITE_TOOLS, tool_annotations
 
     for name in WRITE_TOOLS:
         hints = tool_annotations(name)
@@ -43,7 +43,7 @@ def test_write_tools_are_additive_and_reads_are_idempotent():
 def test_the_hint_dicts_are_not_shared_between_tools():
     """Returned per call, so a caller mutating one tool's hints cannot rewrite
     the advertised contract of every other tool in the process."""
-    from silica.ui.mcp import tool_annotations
+    from silica_core.ui.mcp import tool_annotations
 
     first = tool_annotations("silica_recall")
     first["openWorldHint"] = True
@@ -99,7 +99,7 @@ def test_one_sigint_stops_the_server():
     # readline(), so without run_mcp's own SIGINT handler a graceful shutdown
     # deadlocks and the server needs three Ctrl+C and dies on an abort.
     proc = subprocess.Popen(
-        [sys.executable, "-c", "import sys; from silica.ui.mcp import run_mcp; sys.exit(run_mcp())"],
+        [sys.executable, "-c", "import sys; from silica_core.ui.mcp import run_mcp; sys.exit(run_mcp())"],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
     try:
@@ -128,7 +128,7 @@ def test_search_and_read_are_marked_always_loaded_on_the_wire():
     and only the alias reaches the wire. In the 2026-09-09 baseline Opus
     reached for a deferred silica_search once in 24 tasks."""
     proc = subprocess.Popen(
-        [sys.executable, "-c", "import sys; from silica.ui.mcp import run_mcp; sys.exit(run_mcp())"],
+        [sys.executable, "-c", "import sys; from silica_core.ui.mcp import run_mcp; sys.exit(run_mcp())"],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
     try:

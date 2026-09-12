@@ -30,7 +30,7 @@ from pathlib import Path
 HERE = Path(__file__).parent
 MARK = "silica-mark.svg"
 MASCOT_PNG = "sili_mascot.png"
-STATIC = HERE.parent / "silica" / "ui" / "web" / "static"
+STATIC = HERE.parent / "silica_core" / "ui" / "web" / "static"
 # (file, width) - the chat empty state, and nothing else now
 RASTERS = (("sili.webp", 360),)
 # one drawing per destination that needs it, copied rather than kept by hand:

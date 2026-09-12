@@ -23,7 +23,7 @@ from pathlib import Path
 # Read back through os.environ, not through CONFIG: load_dotenv writes there,
 # so this catches a key that arrived even when no field happens to expose it.
 _PROBE = (
-    "import json, os, silica.config as c; "
+    "import json, os, silica_core.config as c; "
     "print(json.dumps({k: os.getenv(k) for k in "
     "('SILICA_WORKER_MODEL', 'SILICA_EMBEDDING_SERVE_CMD')} "
     "| {'worker_model': os.getenv('SILICA_WORKER_MODEL', '')}))"
@@ -38,7 +38,7 @@ def _boot(cwd: Path, home: Path, env: dict[str, str] | None = None,
     """Start silica in `cwd` with `home` as the user's home, and report the env.
 
     Every SILICA_* the test runner carries is stripped: pytest itself imported
-    silica.config from the checkout, so the developer's own .env is already in
+    silica_core.config from the checkout, so the developer's own .env is already in
     os.environ and would reach the child as a real export, outranking the files
     this test is about.
     """

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from silica.onboarding.setup_client import MCP_COMMAND
+from silica_core.onboarding.setup_client import MCP_COMMAND
 
 ROOT = Path(__file__).resolve().parent.parent
 

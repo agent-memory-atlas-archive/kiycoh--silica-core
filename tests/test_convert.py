@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from silica.config import CONFIG, SilicaConfig
-from silica.sources import convert as conv
+from silica_core.config import CONFIG, SilicaConfig
+from silica_core.sources import convert as conv
 
 
 def _inbox_note(note_rel: str) -> Path:
@@ -1118,7 +1118,7 @@ After a long pause, a new thought.
 
 def _fake_asr(monkeypatch, vtt=_VTT):
     """Stand in for the transcription server, at the provider seam."""
-    from silica.sources.web_fetch import vtt_to_text
+    from silica_core.sources.web_fetch import vtt_to_text
 
     monkeypatch.setattr(
         conv, "_asr_via_endpoint",

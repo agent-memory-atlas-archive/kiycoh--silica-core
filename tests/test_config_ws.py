@@ -1,4 +1,4 @@
-from silica.config import SilicaConfig
+from silica_core.config import SilicaConfig
 
 
 def test_ws_port_default_zero_means_ephemeral(monkeypatch):

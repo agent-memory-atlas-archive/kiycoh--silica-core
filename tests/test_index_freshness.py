@@ -11,14 +11,14 @@ import pytest
 
 @pytest.fixture
 def root(tmp_path, monkeypatch):
-    from silica.config import CONFIG
-    from silica.kernel.recall import paths
+    from silica_core.config import CONFIG
+    from silica_core.kernel.recall import paths
 
     for i in range(3):
         (tmp_path / f"n{i}.md").write_text(f"# Note {i}\n\ncompaction merges runs, note {i}\n", encoding="utf-8")
     monkeypatch.setattr(CONFIG, "vault_path", str(tmp_path))
     monkeypatch.setattr(paths, "index_dir_for", lambda vault, _d=tmp_path / ".idx": _d)
-    import silica.core as core
+    import silica_core.core as core
     core._section_cache.clear()
     return core
 

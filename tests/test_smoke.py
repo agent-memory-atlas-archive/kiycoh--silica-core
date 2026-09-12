@@ -1,10 +1,10 @@
 """Smoke test — verify the tool registry and package imports work."""
-from silica.tools import TOOLS
+from silica_core.tools import TOOLS
 
 
 def test_tool_registry_loads():
     """Importing atomic tools should register them in the TOOLS dict."""
-    import silica.tools.atomic  # noqa: F401
+    import silica_core.tools.atomic  # noqa: F401
     assert len(TOOLS) > 0, "No tools registered after importing atomic module"
 
 
@@ -12,7 +12,7 @@ def test_tool_registry_loads():
 
 def test_tool_json_schema():
     """Each tool should produce a valid JSON schema."""
-    import silica.tools.atomic  # noqa: F401
+    import silica_core.tools.atomic  # noqa: F401
     for name, t in TOOLS.items():
         schema = t.json_schema()
         assert "function" in schema, f"{name} missing 'function' key"
@@ -22,8 +22,8 @@ def test_tool_json_schema():
 
 def test_config_loads():
     """Config singleton should load without errors."""
-    from silica.config import CONFIG
-    from silica.driver import driver_kind
+    from silica_core.config import CONFIG
+    from silica_core.driver import driver_kind
     # model may legitimately be empty (fail-fast default — see test_config_failfast)
     assert driver_kind() == "fs"
     assert CONFIG.vault_path is not None
@@ -31,7 +31,7 @@ def test_config_loads():
 
 def test_driver_base_types():
     """Domain types should be importable."""
-    from silica.driver.base import (
+    from silica_core.driver.base import (
         NoteRef, NoteContent
     )
     ref = NoteRef(name="Test", path="test.md")
@@ -48,8 +48,8 @@ def test_driver_base_types():
 def test_inbox_indexing_and_external_reads(tmp_path):
     """Verify that files inside inbox_dir ARE indexed and searchable (staging is
     source material), and that external files can be read."""
-    from silica.config import CONFIG
-    from silica.driver.fs_backend import ObsidianFSBackend
+    from silica_core.config import CONFIG
+    from silica_core.driver.fs_backend import ObsidianFSBackend
     
     # Set up directories
     vault_dir = tmp_path / "vault"
@@ -94,7 +94,7 @@ def test_inbox_indexing_and_external_reads(tmp_path):
         assert [h.ref.path for h in hits] == ["Inbox/meeting_notes.md"]
 
         # 5. But the inbox is still never a legal op target.
-        from silica.kernel.recall.paths import is_inbox_path
+        from silica_core.kernel.recall.paths import is_inbox_path
         assert is_inbox_path("Inbox/meeting_notes.md")
 
         # 6. Check reading an external file outside the vault
@@ -114,8 +114,8 @@ def test_inbox_indexing_and_external_reads(tmp_path):
 
 def test_list_inbox_files_fs(tmp_path):
     """Verify that list_inbox_files lists notes inside inbox_dir on FS backend."""
-    from silica.config import CONFIG
-    from silica.driver.fs_backend import ObsidianFSBackend
+    from silica_core.config import CONFIG
+    from silica_core.driver.fs_backend import ObsidianFSBackend
     
     vault_dir = tmp_path / "vault"
     vault_dir.mkdir()

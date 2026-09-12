@@ -71,7 +71,7 @@ or it indexes the container.
 
 Cursor and Windsurf also read a project rule file (`.cursor/rules/silica.mdc`,
 `.windsurfrules`). Those are yours, not your home's, so `setup` names them
-rather than writing them; the content is `silica/skills/silica/SKILL.md`.
+rather than writing them; the content is `silica_core/skills/silica/SKILL.md`.
 
 ## The skill
 

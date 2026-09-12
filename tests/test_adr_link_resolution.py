@@ -13,17 +13,17 @@ from pathlib import Path
 
 
 def _bind(vault: Path, monkeypatch) -> None:
-    import silica.driver
-    from silica.config import CONFIG
+    import silica_core.driver
+    from silica_core.config import CONFIG
 
     vault.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(CONFIG, "vault_path", str(vault))
-    monkeypatch.setattr(silica.driver, "_driver", None)
+    monkeypatch.setattr(silica_core.driver, "_driver", None)
 
 
 def test_adr_token_resolves_to_the_numbered_note(tmp_path, monkeypatch):
     _bind(tmp_path / "v", monkeypatch)
-    from silica.driver import DRIVER
+    from silica_core.driver import DRIVER
 
     DRIVER.create("docs/adr/0003-llm-adjudicates-patches.md", "# ADR 3\n")
     DRIVER.create("docs/adr/0029-two-leg-fusion.md", "Keeps ADR-0003 intact.\n")
@@ -35,7 +35,7 @@ def test_adr_token_resolves_to_the_numbered_note(tmp_path, monkeypatch):
 
 def test_unknown_adr_number_stays_unresolved(tmp_path, monkeypatch):
     _bind(tmp_path / "v", monkeypatch)
-    from silica.driver import DRIVER
+    from silica_core.driver import DRIVER
 
     DRIVER.create("docs/adr/0029-two-leg-fusion.md", "See ADR-0099.\n")
     # Same contract as a dangling [[wikilink]]: a ghost ref in links(), an

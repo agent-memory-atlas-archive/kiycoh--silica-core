@@ -12,7 +12,7 @@
     "mcp",
     "agents"
   ],
-  "skills": "./silica/skills",
+  "skills": "./silica_core/skills",
   "mcpServers": "./mcp.json",
   "hooks": "./hooks/hooks.json"
 }

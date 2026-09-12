@@ -7,7 +7,7 @@ A date, a version, a number with a unit and a path are the terms that
 discriminate in a corpus of notes and papers. `[^\\W_]+` alone shreds every
 one of them into fragments the whole corpus shares.
 """
-from silica.kernel.recall.lexical import _tokens
+from silica_core.kernel.recall.lexical import _tokens
 
 
 def test_iso_date_is_one_token_and_keeps_its_parts():
@@ -54,7 +54,7 @@ def test_bare_number_is_untouched():
 
 def test_path_with_extension_is_one_token():
     assert "docs/plans/file.md" in _tokens("see docs/plans/file.md")
-    assert "silica/core.py" in _tokens("edit silica/core.py now")
+    assert "silica_core/core.py" in _tokens("edit silica_core/core.py now")
 
 
 def test_deep_path_without_extension_is_one_token():

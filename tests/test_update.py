@@ -4,7 +4,7 @@
 """`silica update` against throwaway git repos.
 
 Each test builds a bare remote + an "install" clone tracking origin/main, then
-monkeypatches ``silica.update.ROOT`` at the install so update() operates on it.
+monkeypatches ``silica_core.update.ROOT`` at the install so update() operates on it.
 The rollback test is the one that matters: a pulled syntax error must never
 survive on disk.
 """
@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import subprocess
 
-import silica.update as upd
+import silica_core.update as upd
 
 
 def _run(cwd, *args):
@@ -33,8 +33,8 @@ def _make_install(tmp_path):
     _run(seed, "config", "user.email", "t@t")
     _run(seed, "config", "user.name", "t")
     _run(seed, "remote", "add", "origin", str(remote))
-    (seed / "silica").mkdir()
-    (seed / "silica" / "__init__.py").write_text("x = 1\n")
+    (seed / "silica_core").mkdir()
+    (seed / "silica_core" / "__init__.py").write_text("x = 1\n")
     _run(seed, "add", "-A")
     _run(seed, "commit", "-m", "init")
     _run(seed, "push", "-u", "origin", "main")
@@ -74,8 +74,8 @@ def test_already_up_to_date(tmp_path, monkeypatch, capsys):
 
 def test_dirty_tree_aborts(tmp_path, monkeypatch, capsys):
     install = _make_install(tmp_path)
-    _push(tmp_path, "other", "silica/feature.py", "y = 2\n")  # an update exists
-    (install / "silica" / "__init__.py").write_text("x = 999\n")  # local edit
+    _push(tmp_path, "other", "silica_core/feature.py", "y = 2\n")  # an update exists
+    (install / "silica_core" / "__init__.py").write_text("x = 999\n")  # local edit
     monkeypatch.setattr(upd, "ROOT", install)
     assert upd.update() == 1
     assert "uncommitted" in capsys.readouterr().out.lower()
@@ -83,8 +83,8 @@ def test_dirty_tree_aborts(tmp_path, monkeypatch, capsys):
 
 def test_check_ignores_dirty_tree(tmp_path, monkeypatch, capsys):
     install = _make_install(tmp_path)
-    _push(tmp_path, "other", "silica/feature.py", "y = 2\n")
-    (install / "silica" / "__init__.py").write_text("x = 999\n")
+    _push(tmp_path, "other", "silica_core/feature.py", "y = 2\n")
+    (install / "silica_core" / "__init__.py").write_text("x = 999\n")
     monkeypatch.setattr(upd, "ROOT", install)
     assert upd.update(check_only=True) == 0  # pure query, dirty tree irrelevant
     out = capsys.readouterr().out.lower()
@@ -93,17 +93,17 @@ def test_check_ignores_dirty_tree(tmp_path, monkeypatch, capsys):
 
 def test_pulls_and_updates(tmp_path, monkeypatch, capsys):
     install = _make_install(tmp_path)
-    _push(tmp_path, "other", "silica/feature.py", "y = 2\n")
+    _push(tmp_path, "other", "silica_core/feature.py", "y = 2\n")
     monkeypatch.setattr(upd, "ROOT", install)
     assert upd.update() == 0
-    assert (install / "silica" / "feature.py").exists()
+    assert (install / "silica_core" / "feature.py").exists()
     assert "updated" in capsys.readouterr().out.lower()
 
 
 def test_rolls_back_on_syntax_error(tmp_path, monkeypatch, capsys):
     install = _make_install(tmp_path)
     old = _head(install)
-    _push(tmp_path, "other", "silica/broken.py", "def (\n")  # not valid Python
+    _push(tmp_path, "other", "silica_core/broken.py", "def (\n")  # not valid Python
     monkeypatch.setattr(upd, "ROOT", install)
     assert upd.update() == 1
     assert _head(install) == old  # rolled back to pre-pull commit
@@ -121,9 +121,9 @@ def _wheel_root(tmp_path, monkeypatch, *parts):
 
 
 def test_wheel_uv_tool_names_uv_upgrade(tmp_path, monkeypatch, capsys):
-    import silica
+    import silica_core
     _wheel_root(tmp_path, monkeypatch, "uv", "tools", "silica-core")
-    monkeypatch.setattr(silica, "__version__", "1.0.0")
+    monkeypatch.setattr(silica_core, "__version__", "1.0.0")
     monkeypatch.setattr(upd, "_pypi_latest", lambda: "999.0.0")
     assert upd.update() == 1
     out = capsys.readouterr().out
@@ -132,36 +132,36 @@ def test_wheel_uv_tool_names_uv_upgrade(tmp_path, monkeypatch, capsys):
 
 
 def test_wheel_pipx_names_pipx_upgrade(tmp_path, monkeypatch, capsys):
-    import silica
+    import silica_core
     _wheel_root(tmp_path, monkeypatch, "pipx", "venvs", "silica-core")
-    monkeypatch.setattr(silica, "__version__", "1.0.0")
+    monkeypatch.setattr(silica_core, "__version__", "1.0.0")
     monkeypatch.setattr(upd, "_pypi_latest", lambda: "999.0.0")
     assert upd.update() == 1
     assert "pipx upgrade silica-core" in capsys.readouterr().out
 
 
 def test_wheel_plain_pip_names_pip_upgrade(tmp_path, monkeypatch, capsys):
-    import silica
+    import silica_core
     _wheel_root(tmp_path, monkeypatch, "venv", "lib")
-    monkeypatch.setattr(silica, "__version__", "1.0.0")
+    monkeypatch.setattr(silica_core, "__version__", "1.0.0")
     monkeypatch.setattr(upd, "_pypi_latest", lambda: "999.0.0")
     assert upd.update() == 1
     assert "pip install -U silica-core" in capsys.readouterr().out
 
 
 def test_wheel_up_to_date(tmp_path, monkeypatch, capsys):
-    import silica
+    import silica_core
     _wheel_root(tmp_path, monkeypatch, "uv", "tools", "silica-core")
-    monkeypatch.setattr(silica, "__version__", "1.0.0")
+    monkeypatch.setattr(silica_core, "__version__", "1.0.0")
     monkeypatch.setattr(upd, "_pypi_latest", lambda: "1.0.0")
     assert upd.update() == 0
     assert "up to date" in capsys.readouterr().out.lower()
 
 
 def test_wheel_check_only_reports_without_failing(tmp_path, monkeypatch, capsys):
-    import silica
+    import silica_core
     _wheel_root(tmp_path, monkeypatch, "uv", "tools", "silica-core")
-    monkeypatch.setattr(silica, "__version__", "1.0.0")
+    monkeypatch.setattr(silica_core, "__version__", "1.0.0")
     monkeypatch.setattr(upd, "_pypi_latest", lambda: "999.0.0")
     assert upd.update(check_only=True) == 0
     assert "999.0.0" in capsys.readouterr().out
@@ -184,9 +184,9 @@ def test_pypi_version_compare_is_numeric():
 
 
 def test_behind_count_wheel_uses_cache(tmp_path, monkeypatch):
-    import silica
+    import silica_core
     _wheel_root(tmp_path, monkeypatch, "uv", "tools", "silica-core")
-    monkeypatch.setattr(silica, "__version__", "1.0.0")
+    monkeypatch.setattr(silica_core, "__version__", "1.0.0")
     cache = tmp_path / "pypi-latest"
     monkeypatch.setattr(upd, "CACHE", cache)
     cache.write_text("2.0.0")  # fresh mtime: no background refresh fires

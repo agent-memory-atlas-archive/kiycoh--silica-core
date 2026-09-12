@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from silica.tools import tool, TOOLS
+from silica_core.tools import tool, TOOLS
 
 
 def test_tool_defaults_to_lazy_collapse():

@@ -3,8 +3,8 @@
 
 """`.silicaignore` — per-vault extension of NOISE_DIRS."""
 
-from silica.kernel.recall.paths import NOISE_DIRS, SILICAIGNORE_REL, ignore_matcher
-from silica.onboarding.adopt import seed_silicaignore
+from silica_core.kernel.recall.paths import NOISE_DIRS, SILICAIGNORE_REL, ignore_matcher
+from silica_core.onboarding.adopt import seed_silicaignore
 
 
 def test_builtins_apply_without_a_file(tmp_path):
@@ -52,7 +52,7 @@ def test_seed_writes_builtins_commented_out(tmp_path):
 
 
 def test_index_walk_honours_it(tmp_path, monkeypatch):
-    from silica.driver.fs_backend import ObsidianFSBackend
+    from silica_core.driver.fs_backend import ObsidianFSBackend
 
     (tmp_path / "keep.md").write_text("keep", encoding="utf-8")
     (tmp_path / "archive").mkdir()

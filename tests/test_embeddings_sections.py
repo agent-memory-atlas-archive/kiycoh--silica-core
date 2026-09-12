@@ -28,9 +28,9 @@ def fake_embed(texts):
 
 @pytest.fixture
 def root(tmp_path, monkeypatch):
-    from silica.config import CONFIG
-    from silica.kernel.recall import paths
-    from silica import embeddings
+    from silica_core.config import CONFIG
+    from silica_core.kernel.recall import paths
+    from silica_core import embeddings
 
     (tmp_path / "a.md").write_text("# Cars\n\n## Engines\n\nAn automobile has an engine.\n\n## Wheels\n\nA vehicle rolls on wheels.\n", encoding="utf-8")
     (tmp_path / "b.md").write_text("# Dogs\n\n## Breeds\n\nA hound barks at night.\n", encoding="utf-8")
@@ -41,7 +41,7 @@ def root(tmp_path, monkeypatch):
     monkeypatch.setattr(paths, "index_dir_for", lambda vault, _d=tmp_path / ".idx": _d)
     monkeypatch.setattr(embeddings, "embed_texts", fake_embed)
     monkeypatch.setattr(embeddings, "_CACHE", None)
-    import silica.core as core
+    import silica_core.core as core
     core._section_cache.clear()
     return core
 
@@ -74,7 +74,7 @@ def test_a_changed_file_keeps_no_vectors(root, tmp_path):
 
 
 def test_text_leaves_the_machine_only_with_consent(root, monkeypatch):
-    from silica.config import CONFIG
+    from silica_core.config import CONFIG
     monkeypatch.setattr(CONFIG, "embedding_base_url", "https://api.example.com/v1")
     r = root.build_index(embed=True)
     assert r["error"]["code"] == "consent_required" and "api.example.com" in r["error"]["hint"]
@@ -89,7 +89,7 @@ def test_text_leaves_the_machine_only_with_consent(root, monkeypatch):
 
 
 def test_a_failing_endpoint_leaves_the_search_lexical(root, monkeypatch):
-    from silica import embeddings
+    from silica_core import embeddings
     root.build_index(embed=True)
 
     def refused(texts):
@@ -112,7 +112,7 @@ def test_query_groups_fuse_by_rank(root):
 
 
 def test_the_store_is_read_once_while_unchanged(root):
-    from silica import embeddings
+    from silica_core import embeddings
     root.build_index(embed=True)
     first = embeddings.load()
     assert first is not None and embeddings.load()[1] is first[1]
@@ -120,7 +120,7 @@ def test_the_store_is_read_once_while_unchanged(root):
 
 def test_pure_python_and_numpy_dot_products_agree(root, monkeypatch):
     import sys
-    from silica import embeddings
+    from silica_core import embeddings
     root.build_index(embed=True)
     with_numpy = root.search("car")["hits"]
     monkeypatch.setitem(sys.modules, "numpy", None)  # `import numpy` now raises ImportError
@@ -131,7 +131,7 @@ def test_pure_python_and_numpy_dot_products_agree(root, monkeypatch):
 
 def test_cli_also_adds_a_query_group(root, tmp_path, capsys):
     import json
-    from silica.cli import main
+    from silica_core.cli import main
     assert main(["--vault", str(tmp_path), "search", "memtable", "--also", "hound", "-k", "5"]) == 0
     r = json.loads(capsys.readouterr().out)
     assert r["queries"] == ["hound"] and {h["path"] for h in r["hits"]} == {"b.md", "c.md"}
@@ -143,8 +143,8 @@ def test_prefixes_reach_the_embedder_on_both_sides(root, monkeypatch):
     there); potion and qwen3 want neither, so both are empty by default and
     named per model. A changed document prefix means the stored vectors
     describe other text: they are rebuilt."""
-    from silica.config import CONFIG
-    from silica import embeddings
+    from silica_core.config import CONFIG
+    from silica_core import embeddings
 
     seen: list[str] = []
 

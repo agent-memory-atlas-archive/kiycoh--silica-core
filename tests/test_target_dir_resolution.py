@@ -5,8 +5,8 @@ Real incident (2026-07-17 nucleate run): the user typed
 holding 'Informatica/Intelligenza artificiale/Machine learning' — every new
 note ENOENT'd through the Obsidian bridge and collision paths mismatched.
 """
-from silica.config import CONFIG
-from silica.kernel.recall.paths import resolve_target_dir
+from silica_core.config import CONFIG
+from silica_core.kernel.recall.paths import resolve_target_dir
 
 
 def _vault(tmp_path, monkeypatch, *dirs):

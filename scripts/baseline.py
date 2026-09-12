@@ -127,7 +127,7 @@ TASKS = [
     {"id": "C1", "cwd": REPO, "kind": "code",
      "prompt": "Which function computes the `coverage` value of a search hit, and how does a "
                "query term that occurs nowhere in the corpus enter that number?",
-     "all_of": ["silica/core.py"],
+     "all_of": ["silica_core/core.py"],
      "any_of": [["idf_absent", "df=0", "df = 0", "document frequency zero", "found nowhere",
                  "occurs nowhere", "absent term"]]},
     {"id": "C2", "cwd": REPO, "kind": "code",
@@ -135,7 +135,7 @@ TASKS = [
      # the call sites are read from the tree at start: an edit above one of
      # them moved core.py's from 518 to 523 between two runs on 2026-09-09
      "all_of": [f"{f}:{n}" for f, n in (
-         (f, i) for f in ("silica/core.py", "silica/kernel/recall/rerank.py", "tests/test_recall_windows.py")
+         (f, i) for f in ("silica_core/core.py", "silica_core/kernel/recall/rerank.py", "tests/test_recall_windows.py")
          for i, line in enumerate((REPO / f).read_text().splitlines(), 1)
          if "best_window_spans(" in line and not line.lstrip().startswith(("def ", "from ", "import ")))]
      },
@@ -145,7 +145,7 @@ TASKS = [
      "all_of": ["codepack.py"],
      "any_of": [["file-level", "no symbol", "whole file", "whole-file"]]},
     {"id": "C4", "cwd": REPO, "kind": "code",
-     "prompt": "Which modules outside tests/ import `silica.core`, and what does each one "
+     "prompt": "Which modules outside tests/ import `silica_core.core`, and what does each one "
                "use it for?",
      "all_of": ["cli.py", "mcp.py", "checks.py"]},
     {"id": "D1", "cwd": PAPERS, "kind": "docs",
@@ -273,7 +273,7 @@ def skill_loaded(plugin_dir: str) -> dict | None:
     install Claude Code records in installed_plugins.json; None when neither
     exists, which is itself a finding."""
     if plugin_dir:
-        path = Path(plugin_dir) / "silica" / "skills" / "silica" / "SKILL.md"
+        path = Path(plugin_dir) / "silica_core" / "skills" / "silica" / "SKILL.md"
     else:
         reg = Path.home() / ".claude" / "plugins" / "installed_plugins.json"
         try:
@@ -282,7 +282,7 @@ def skill_loaded(plugin_dir: str) -> dict | None:
             entries = []
         if not entries:
             return None
-        path = Path(entries[-1]["installPath"]) / "silica" / "skills" / "silica" / "SKILL.md"
+        path = Path(entries[-1]["installPath"]) / "silica_core" / "skills" / "silica" / "SKILL.md"
     try:
         return {"path": str(path), "sha256": _sha256(path.read_bytes())}
     except OSError:

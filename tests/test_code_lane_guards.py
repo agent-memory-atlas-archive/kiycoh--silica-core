@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from silica.kernel.code import codeast, codegraph, codepack, gitstate
+from silica_core.kernel.code import codeast, codegraph, codepack, gitstate
 
 
 def _init_repo(path: Path) -> None:
@@ -88,7 +88,7 @@ def test_extract_skeleton_degrades_on_recursion_instead_of_raising():
 
 
 def test_deep_file_does_not_break_a_codegraph_build(tmp_path):
-    from silica.kernel.code import codegraph
+    from silica_core.kernel.code import codegraph
 
     repo = tmp_path / "repo"
     repo.mkdir()

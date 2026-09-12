@@ -15,7 +15,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-WEB = Path(__file__).resolve().parents[1] / "silica" / "ui" / "web" / "static"
+WEB = Path(__file__).resolve().parents[1] / "silica_core" / "ui" / "web" / "static"
 
 _INDEX = (WEB / "index.html").read_text(encoding="utf-8")
 

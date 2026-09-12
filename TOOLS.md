@@ -318,7 +318,7 @@ beyond the built-in PDF text layer.
 
 ## Surfaces
 
-- Python: `from silica.core import files, search, read, code_pack, write_note`
+- Python: `from silica_core.core import files, search, read, code_pack, write_note`
 - CLI: `silica files|search|read|code-pack|write-note ... --json`
 - MCP: `silica mcp --vault DIR` exposes exactly these five
 - `silica repl`: the optional reference harness, an agent loop over the same

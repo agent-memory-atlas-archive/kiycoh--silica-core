@@ -3,7 +3,7 @@ requires = ["setuptools>=77", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-version_file = "silica/_version.py"
+version_file = "silica_core/_version.py"
 # The plugin marketplace copies this tree into ~/.claude/plugins/cache
 # without .git, and mcp.json builds it there, so version inference has
 # no tags to read and raised, taking the whole MCP server down with it.
@@ -59,12 +59,12 @@ dense = ["model2vec>=0.5", "numpy>=1.26"]
 all = ["silica-core[connect,mcp,dense]"]
 
 [project.scripts]
-silica = "silica.entry:main"
+silica = "silica_core.entry:main"
 # uvx runs the console script named after the package it was given, and the
 # registry entry in server.json launches `uvx --from silica-core[mcp,dense]
 # silica-core mcp --retrieval local-hybrid`. Without this alias every registry-driven install dies at
 # "executable not found" with the wheel sitting right there.
-silica-core = "silica.entry:main"
+silica-core = "silica_core.entry:main"
 
 [project.urls]
 Homepage = "https://github.com/kiycoh/silica-core"
@@ -77,7 +77,7 @@ Issues = "https://github.com/kiycoh/silica-core/issues"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["silica", "silica.*"]
+include = ["silica_core", "silica_core.*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -93,27 +93,36 @@ testpaths = ["tests"]
 select = ["F", "E9"]
 
 [tool.importlinter]
-root_packages = ["silica"]
+root_packages = ["silica_core"]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
 name = "the kernel, the driver and the converters never import a surface"
 type = "forbidden"
-source_modules = ["silica.kernel", "silica.driver", "silica.sources"]
-forbidden_modules = ["silica.core", "silica.cli", "silica.ui", "silica.onboarding", "silica.repl"]
+source_modules = ["silica_core.kernel", "silica_core.driver", "silica_core.sources"]
+forbidden_modules = ["silica_core.core", "silica_core.cli", "silica_core.ui", "silica_core.onboarding", "silica_core.repl"]
 allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]
 name = "the core never reaches the driver or a surface"
 type = "forbidden"
-source_modules = ["silica.core"]
-forbidden_modules = ["silica.driver", "silica.cli", "silica.ui", "silica.onboarding", "silica.repl"]
+source_modules = ["silica_core.core"]
+forbidden_modules = ["silica_core.driver", "silica_core.cli", "silica_core.ui", "silica_core.onboarding", "silica_core.repl"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+# One arrow: silica-harness depends on this package, never the reverse. The
+# core does not know the private tree exists (its ADR-0043).
+name = "the core never imports the harness"
+type = "forbidden"
+source_modules = ["silica_core"]
+forbidden_modules = ["silica"]
 allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]
 name = "the kernel makes no network call"
 type = "forbidden"
-source_modules = ["silica.kernel"]
+source_modules = ["silica_core.kernel"]
 forbidden_modules = ["httpx", "websockets"]
 allow_indirect_imports = true
 

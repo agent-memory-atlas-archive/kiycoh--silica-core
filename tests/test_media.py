@@ -1,9 +1,9 @@
-"""Unit tests for silica.kernel.text.media — strip_images and section images."""
+"""Unit tests for silica_core.kernel.text.media — strip_images and section images."""
 from __future__ import annotations
 
 import textwrap
 
-from silica.kernel.text.media import (
+from silica_core.kernel.text.media import (
     strip_images,
     images_for_section,
     append_section_images,

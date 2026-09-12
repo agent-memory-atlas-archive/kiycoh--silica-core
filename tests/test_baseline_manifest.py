@@ -57,7 +57,7 @@ def test_manifest_is_appended_with_tasks_corpora_and_the_skill(tmp_path):
     corpus = tmp_path / "corpus"
     corpus.mkdir()
     (corpus / "p.md").write_text("paper", encoding="utf-8")
-    plugin = tmp_path / "plugin" / "silica" / "skills" / "silica"
+    plugin = tmp_path / "plugin" / "silica_core" / "skills" / "silica"
     plugin.mkdir(parents=True)
     (plugin / "SKILL.md").write_text("# skill", encoding="utf-8")
     task = {"id": "T1", "cwd": corpus, "kind": "docs", "prompt": "q", "all_of": ["paper"]}

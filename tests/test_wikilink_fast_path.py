@@ -26,8 +26,8 @@ import textwrap
 
 import pytest
 
-from silica.kernel.link import ast as ast_mod
-from silica.kernel.link.ast import extract_links
+from silica_core.kernel.link import ast as ast_mod
+from silica_core.kernel.link.ast import extract_links
 
 
 class _ParserReached(Exception):

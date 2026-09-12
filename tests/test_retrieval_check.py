@@ -28,13 +28,13 @@ def index_dir(tmp_path_factory):
 def corpus(index_dir, monkeypatch):
     """Per test, because the suite's autouse isolation re-points CONFIG.vault_path
     before every test; the build is incremental, so only the first one pays."""
-    from silica.config import CONFIG
-    from silica.kernel.recall import paths
+    from silica_core.config import CONFIG
+    from silica_core.kernel.recall import paths
 
     monkeypatch.setenv("SILICA_VAULT", str(Path(CORPUS).resolve()))
     monkeypatch.setattr(CONFIG, "vault_path", str(Path(CORPUS).resolve()))
     monkeypatch.setattr(paths, "index_dir_for", lambda vault, _d=index_dir: _d)
-    import silica.core as core
+    import silica_core.core as core
 
     t0 = time.time()
     built = core.build_index()
@@ -95,8 +95,8 @@ def test_dense_leg_lifts_the_paraphrase_ceiling(corpus, monkeypatch):
     nomic-embed-text through Ollama. The same question in Italian stayed
     unanswered with that English model (top cosines 0.53 on OCR papers):
     another language needs a multilingual embedder, not a bigger one."""
-    from silica import embeddings
-    from silica.config import CONFIG
+    from silica_core import embeddings
+    from silica_core.config import CONFIG
     # the suite's isolation switches the extension off for every test; the env names the embedder here
     for field, var in (("embedding_base_url", "SILICA_EMBEDDING_BASE_URL"), ("embedding_model", "SILICA_EMBEDDING_MODEL"),
                        ("embedding_api_key", "SILICA_EMBEDDING_API_KEY")):

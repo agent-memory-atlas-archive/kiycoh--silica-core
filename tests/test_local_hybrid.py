@@ -16,9 +16,9 @@ def fake_embed(texts):
 
 @pytest.fixture
 def root(tmp_path, monkeypatch):
-    from silica import embeddings
-    from silica.config import CONFIG
-    from silica.kernel.recall import paths
+    from silica_core import embeddings
+    from silica_core.config import CONFIG
+    from silica_core.kernel.recall import paths
 
     (tmp_path / "notes.md").write_text(NOTE, encoding="utf-8")
     monkeypatch.setattr(CONFIG, "vault_path", str(tmp_path))
@@ -26,14 +26,14 @@ def root(tmp_path, monkeypatch):
     monkeypatch.setattr(embeddings, "embed_texts", fake_embed)
     monkeypatch.setattr(embeddings, "_static_model", lambda: object())  # the warm-up loads it; no Hub here
     monkeypatch.setattr(paths, "index_dir_for", lambda vault, _d=tmp_path / ".idx": _d)
-    import silica.core as core
+    import silica_core.core as core
     core._section_cache.clear()
     return core
 
 
 def test_local_hybrid_binds_potion_and_drops_the_endpoint(monkeypatch):
-    from silica import embeddings
-    from silica.config import CONFIG
+    from silica_core import embeddings
+    from silica_core.config import CONFIG
     monkeypatch.setattr(CONFIG, "embedding_base_url", "http://localhost:11434/v1")
     monkeypatch.setattr(CONFIG, "embedding_model", "nomic-embed-text")
     embeddings.set_retrieval("local-hybrid")
@@ -43,15 +43,15 @@ def test_local_hybrid_binds_potion_and_drops_the_endpoint(monkeypatch):
 
 
 def test_local_hybrid_keeps_a_users_static_model(monkeypatch):
-    from silica import embeddings
-    from silica.config import CONFIG
+    from silica_core import embeddings
+    from silica_core.config import CONFIG
     monkeypatch.setattr(CONFIG, "embedding_model", "model2vec/minishlab/potion-base-8M")
     embeddings.set_retrieval("local-hybrid")
     assert CONFIG.embedding_model == "model2vec/minishlab/potion-base-8M"
 
 
 def test_search_is_lexical_and_says_warming_while_the_vectors_build(root, monkeypatch):
-    from silica import embeddings
+    from silica_core import embeddings
     embeddings.set_retrieval("local-hybrid")
     gate, real = threading.Event(), root.build_index
 
@@ -71,7 +71,7 @@ def test_search_is_lexical_and_says_warming_while_the_vectors_build(root, monkey
 
 
 def test_a_failed_warm_up_is_reported_and_the_search_stays_lexical(root, monkeypatch):
-    from silica import embeddings
+    from silica_core import embeddings
     embeddings.set_retrieval("local-hybrid")
 
     def refused(texts):
@@ -85,8 +85,8 @@ def test_a_failed_warm_up_is_reported_and_the_search_stays_lexical(root, monkeyp
 
 
 def test_configure_retrieval_starts_the_warm_up_for_the_plugin(root):
-    from silica import embeddings
-    from silica.ui.mcp import configure_retrieval
+    from silica_core import embeddings
+    from silica_core.ui.mcp import configure_retrieval
     assert configure_retrieval("lexical") is None and embeddings.warmup_state()["retrieval"] == "lexical"
     t = configure_retrieval("local-hybrid")
     t.join(10)
@@ -94,13 +94,13 @@ def test_configure_retrieval_starts_the_warm_up_for_the_plugin(root):
 
 
 def test_the_cli_takes_the_retrieval_flag():
-    from silica.cli import _parser
+    from silica_core.cli import _parser
     assert _parser().parse_args(["mcp"]).retrieval == "lexical"
     assert _parser().parse_args(["mcp", "--retrieval", "local-hybrid"]).retrieval == "local-hybrid"
 
 
 def test_search_serves_the_committed_index_while_another_process_embeds(root):
-    from silica import embeddings
+    from silica_core import embeddings
     root.build_index()  # the lexical index another server committed
     embeddings.set_retrieval("local-hybrid")
     with root._paths.index_lock(root._paths.index_dir() / "build"):  # that server, mid-embedding
@@ -116,7 +116,7 @@ def test_search_serves_the_committed_index_while_another_process_embeds(root):
 
 
 def test_ready_means_the_query_model_is_loaded(root, monkeypatch):
-    from silica import embeddings
+    from silica_core import embeddings
     embeddings.set_retrieval("local-hybrid")
     embeddings.warm_up().join(10)  # the vectors are on disk now
     assert embeddings.warmup_state()["state"] == "ready"
@@ -128,7 +128,7 @@ def test_ready_means_the_query_model_is_loaded(root, monkeypatch):
 
 
 def test_a_missing_model_fails_the_warm_up_not_the_first_search(root, monkeypatch):
-    from silica import embeddings
+    from silica_core import embeddings
     embeddings.set_retrieval("local-hybrid")
     embeddings.warm_up().join(10)
 

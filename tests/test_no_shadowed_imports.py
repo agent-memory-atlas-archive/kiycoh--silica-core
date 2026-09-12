@@ -13,7 +13,7 @@ from __future__ import annotations
 import ast
 import pathlib
 
-PACKAGE = pathlib.Path(__file__).resolve().parent.parent / "silica"
+PACKAGE = pathlib.Path(__file__).resolve().parent.parent / "silica_core"
 
 
 def _bound_names(node: ast.Import | ast.ImportFrom) -> list[str]:

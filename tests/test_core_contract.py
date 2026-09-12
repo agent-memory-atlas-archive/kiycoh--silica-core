@@ -9,8 +9,8 @@ import pytest
 
 @pytest.fixture
 def root(tmp_path, monkeypatch):
-    from silica.config import CONFIG
-    from silica.kernel.recall import paths
+    from silica_core.config import CONFIG
+    from silica_core.kernel.recall import paths
 
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "lsm.md").write_text(
@@ -23,12 +23,12 @@ def root(tmp_path, monkeypatch):
     (tmp_path / "node_modules" / "x.md").write_text("noise", encoding="utf-8")
     monkeypatch.setattr(CONFIG, "vault_path", str(tmp_path))
     monkeypatch.setattr(paths, "index_dir_for", lambda vault, _d=tmp_path / ".idx": _d)
-    import silica.core as core
+    import silica_core.core as core
     return core
 
 
 def test_default_mcp_list_is_exactly_five():
-    from silica.ui.mcp import CORE_TOOLS, exposed_tools
+    from silica_core.ui.mcp import CORE_TOOLS, exposed_tools
     assert list(exposed_tools()) == list(CORE_TOOLS) and len(CORE_TOOLS) == 5
 
 
@@ -129,7 +129,7 @@ def test_cli_replies_in_utf8_whatever_the_console_encoding(root, tmp_path, monke
     # has no arrow: without the reconfigure in main() the search dies at print.
     import io
     import sys
-    from silica.cli import main
+    from silica_core.cli import main
     root.write_note("enc/arrow", "# Arrow\n\nleft → right\n")
     root.build_index()
     out = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
@@ -140,7 +140,7 @@ def test_cli_replies_in_utf8_whatever_the_console_encoding(root, tmp_path, monke
 
 
 def test_cli_prints_the_tool_reply(root, tmp_path, capsys):
-    from silica.cli import main
+    from silica_core.cli import main
     root.build_index()
     assert main(["--vault", str(tmp_path), "files", "--status", "unconverted"]) == 0
     out = json.loads(capsys.readouterr().out)
@@ -149,8 +149,8 @@ def test_cli_prints_the_tool_reply(root, tmp_path, capsys):
 
 
 def test_the_dense_leg_runs_by_itself_and_adds_a_dense_only_document(root, monkeypatch):
-    from silica import embeddings
-    from silica.config import CONFIG
+    from silica_core import embeddings
+    from silica_core.config import CONFIG
 
     assert root.search("x")["dense"] == {"state": "off"}
     monkeypatch.setattr(CONFIG, "embedding_base_url", "http://127.0.0.1:9/v1")  # loopback: no consent to ask
@@ -215,12 +215,12 @@ def test_a_replaced_original_reads_as_stale_under_the_same_text_version(root, tm
     not changed, so its `version` must hold, and the reply must say the
     source did — the two are different facts, and only the hash the
     conversion recorded can tell the second."""
-    import silica.driver
-    from silica.cli import main
-    from silica.config import CONFIG
+    import silica_core.driver
+    from silica_core.cli import main
+    from silica_core.config import CONFIG
     from tests.doc_factory import pdf_bytes
 
-    monkeypatch.setattr(silica.driver, "_driver", None)
+    monkeypatch.setattr(silica_core.driver, "_driver", None)
     monkeypatch.setattr(CONFIG, "pdf_provider", "pdfium")  # the machine's SILICA_PDF_PROVIDER may say mineru: 33 s of OCR
     (tmp_path / "docs" / "paper.pdf").write_bytes(pdf_bytes(["Compaction merges sorted runs."]))
     assert main(["--vault", str(tmp_path), "import", "docs/paper.pdf"]) == 0
@@ -246,12 +246,12 @@ def test_the_search_to_read_path_reports_a_stale_conversion(root, tmp_path, monk
     """Search returns the note's path, not the PDF's; reading that path is
     the ordinary route, and it must carry the same verdict as reading the
     PDF. Import A, index, replace the PDF with B, search a phrase of A."""
-    import silica.driver
-    from silica.config import CONFIG
-    from silica.sources.convert import convert
+    import silica_core.driver
+    from silica_core.config import CONFIG
+    from silica_core.sources.convert import convert
     from tests.doc_factory import pdf_bytes
 
-    monkeypatch.setattr(silica.driver, "_driver", None)
+    monkeypatch.setattr(silica_core.driver, "_driver", None)
     monkeypatch.setattr(CONFIG, "pdf_provider", "pdfium")
     pdf = tmp_path / "docs" / "paper.pdf"
     pdf.write_bytes(pdf_bytes(["Bloom filters skip absent keys."]))

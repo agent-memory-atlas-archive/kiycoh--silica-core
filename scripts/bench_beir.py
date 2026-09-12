@@ -127,10 +127,10 @@ def silica_arm(md: Path, idx: Path, queries, *, hybrid: bool, pool: int, k: int,
     the experiment on its width. `dense_only` ranks by the vectors alone
     (`embeddings.rank`, best section per document), the ablation that says
     what the fusion adds to the embedder."""
-    from silica.config import CONFIG
-    from silica.kernel.recall import lexical, paths
-    from silica import embeddings
-    import silica.core as core
+    from silica_core.config import CONFIG
+    from silica_core.kernel.recall import lexical, paths
+    from silica_core import embeddings
+    import silica_core.core as core
 
     CONFIG.vault_path = str(md)
     if not hybrid:  # the dense leg runs by itself once an embedder is named: the lexical arm must not see one
@@ -322,7 +322,7 @@ def main() -> int:
             per_query, timing = ck_arm(md, queries, binary=a.bin or "ck", mode=a.mode or "hybrid", k=a.k, model=a.model)
         s = summarise(per_query, a.k)
         row = {"dataset": name, "arm": a.arm, "mode": a.mode, "label": a.label, **s, **timing,
-               "tokenizer": __import__("silica.kernel.recall.lexical", fromlist=["TOKENIZER_VERSION"]).TOKENIZER_VERSION,
+               "tokenizer": __import__("silica_core.kernel.recall.lexical", fromlist=["TOKENIZER_VERSION"]).TOKENIZER_VERSION,
                "env": {k: v for k, v in os.environ.items() if k.startswith("SILICA_") and "KEY" not in k}}
         rows.append(row)
         (BENCH / "results").mkdir(exist_ok=True)

@@ -45,7 +45,7 @@ Repository = "https://github.com/kiycoh/silica-core"
 Issues = "https://github.com/kiycoh/silica-core/issues"
 
 [project.scripts]
-silica = "silica.entry:main"
+silica = "silica_core.entry:main"
 
 [tool.setuptools]
 # Nothing to find: this distribution owns no import package. Stated rather than

@@ -31,7 +31,7 @@ def test_hook_fires_on_a_question_without_an_identifier_only():
     assert h.nudge("List every call site of `best_window_spans`.") is None  # a name in backticks
     assert h.nudge("What does silica_code_pack do with a #L12 target?") is None  # snake_case, #L
     assert h.nudge("How does SessionRedirectMixin merge cookies?") is None  # camelCase
-    assert h.nudge("fix the bug in silica/core.py") is None  # a path, and not a question
+    assert h.nudge("fix the bug in silica_core/core.py") is None  # a path, and not a question
     assert h.nudge("") is None
     out = subprocess.run([sys.executable, str(REPO / "hooks" / "prompt.py")],
                          input=json.dumps({"prompt": "Why is the cache invalidated on every write?"}),
@@ -46,7 +46,7 @@ def test_hook_fires_on_a_question_without_an_identifier_only():
 
 
 def test_setup_claude_writes_its_block_once(tmp_path, monkeypatch):
-    from silica.onboarding import guidance as g
+    from silica_core.onboarding import guidance as g
     monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path))
     path = g.claude_md_path()
     assert path == tmp_path / "CLAUDE.md"
@@ -63,7 +63,7 @@ CAP = 1500  # a drift stop, not a measured cliff: 1,047 and 2,046 chars measured
 
 
 def test_search_description_opens_with_the_ask_and_fits():
-    from silica.ui.mcp import exposed_tools
+    from silica_core.ui.mcp import exposed_tools
     d = exposed_tools(False)["silica_search"].description
     assert d.startswith("For a question that names no identifier") and "Do not grep for the words of a question" in d
     assert len(d) < CAP, f"silica_search description is {len(d)} chars, over the {CAP} cap by {len(d) - CAP + 1}"
@@ -74,8 +74,8 @@ def test_no_contract_surface_says_blocked():
     up instead of taking the alternative (context-mode ADR-0003: 6/6
     capitulations with it, 0/6 with "redirected"). The one token with a
     measured cost; the list grows only with a number of its own."""
-    from silica.onboarding.guidance import GUIDANCE
-    from silica.ui.mcp import exposed_tools
+    from silica_core.onboarding.guidance import GUIDANCE
+    from silica_core.ui.mcp import exposed_tools
     surfaces = {name: t.description for name, t in exposed_tools(False).items()}
     surfaces["hook"] = _hook().LINE
     surfaces["guidance"] = GUIDANCE
