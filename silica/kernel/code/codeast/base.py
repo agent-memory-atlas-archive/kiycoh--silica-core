@@ -105,9 +105,10 @@ def extract_skeleton(source: str, language: str, path: str = "") -> ModuleSkelet
     # of marking one file, since _file_entry only catches OSError.
     try:
         from tree_sitter_language_pack import get_parser
-        tree = get_parser(language).parse(source.encode("utf-8"))
-
+        # One encode, and the parser stays named while the nodes are read.
         src = source.encode("utf-8")
+        parser = get_parser(language)
+        tree = parser.parse(src)
         imports: list[str] = []
         symbols: list[Symbol] = []
         root = tree.root_node

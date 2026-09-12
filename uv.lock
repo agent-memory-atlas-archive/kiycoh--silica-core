@@ -1692,7 +1692,7 @@ requires-dist = [
     { name = "snowballstemmer" },
     { name = "stop-words", specifier = ">=2025.11.4" },
     { name = "striprtf", specifier = ">=0.0.29" },
-    { name = "tree-sitter", specifier = ">=0.25" },
+    { name = "tree-sitter", specifier = ">=0.25,<0.26" },
     { name = "tree-sitter-language-pack", specifier = ">=1.13" },
     { name = "websockets", marker = "extra == 'connect'", specifier = ">=16.0" },
     { name = "xlrd", specifier = ">=2.0" },

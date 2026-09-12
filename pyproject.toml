@@ -35,7 +35,11 @@ dependencies = [
   "orjson",
   "snowballstemmer",
   "stop-words>=2025.11.4",
-  "tree-sitter>=0.25",
+  # 0.26.0 corrupts the heap walking a tree it parsed: ~900 of fastapi's test
+  # files in one process segfault the interpreter, in tree-sitter alone with
+  # no silica in the picture, and 0.25.2 walks the same files clean. Every
+  # language pack version is affected, so the ceiling is on tree-sitter.
+  "tree-sitter>=0.25,<0.26",
   "tree-sitter-language-pack>=1.13",
   # PDF text layer (BSD-3/Apache-2.0, one ~3 MB wheel). Scans need mineru,
   # installed separately and called as a command.
