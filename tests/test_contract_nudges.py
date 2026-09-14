@@ -39,8 +39,11 @@ def test_hook_fires_on_a_question_without_an_identifier_only():
     assert out.returncode == 0 and out.stdout.strip() == h.LINE
     assert subprocess.run([sys.executable, str(REPO / "hooks" / "prompt.py")], input="not json",
                           capture_output=True, text=True).returncode == 0
+    # Claude Code loads hooks/hooks.json from the plugin root on its own and
+    # rejects a manifest that names it again ("Duplicate hooks file detected").
+    # Declared, the key reached every install of 0.3.0 and again of 0.8.2.
     manifest = json.loads((REPO / ".claude-plugin" / "plugin.json").read_text())
-    assert manifest["hooks"] == "./hooks/hooks.json"
+    assert "hooks" not in manifest, "Claude Code auto-loads hooks/hooks.json; naming it again is an error"
     hooks = json.loads((REPO / "hooks" / "hooks.json").read_text())
     assert "UserPromptSubmit" in hooks["hooks"]
 
