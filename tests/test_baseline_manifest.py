@@ -125,3 +125,46 @@ def test_relative_plugin_path_survives_task_working_directory(tmp_path, monkeypa
     task = {"id": "T1", "cwd": corpus, "kind": "code", "prompt": "q", "all_of": ["ok"]}
     for arm in ("A", "F", "P", "S"):
         assert b.run_one(task, arm, 1, "sonnet", 10, 1.0, 10, plugin_dir=".")["score"] == 1
+
+
+def test_debug_logs_give_each_run_its_own_file_ahead_of_the_variadic_allowlist(tmp_path, monkeypatch):
+    b = _baseline()
+    seen = []
+
+    def run(cmd, **kwargs):
+        seen.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps({
+            "type": "result", "result": "ok", "usage": {},
+        }), stderr="")
+
+    monkeypatch.setattr(b.subprocess, "run", run)
+    monkeypatch.setattr(b, "DEBUG_LOGS", True)
+    task = {"id": "T1", "cwd": tmp_path, "kind": "code", "prompt": "q", "all_of": ["ok"]}
+    b.run_one(task, "S", 2, "sonnet", 10, 1.0, 10, out=tmp_path)
+    cmd = seen[0]
+    assert cmd[cmd.index("--debug-file") + 1] == str(tmp_path / "debug" / "T1-S-2.txt")
+    assert cmd.index("--debug-file") < cmd.index("--allowedTools")
+    assert (tmp_path / "debug").is_dir()
+
+
+def test_a_relative_results_folder_keeps_debug_logs_out_of_the_task_root(tmp_path, monkeypatch):
+    # the run's cwd is the task's root, an indexed corpus: a relative path
+    # there writes the log (prompt and answer) into what the next run searches
+    b = _baseline()
+    seen = []
+
+    def run(cmd, **kwargs):
+        seen.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps({
+            "type": "result", "result": "ok", "usage": {},
+        }), stderr="")
+
+    monkeypatch.setattr(b.subprocess, "run", run)
+    monkeypatch.setattr(b, "DEBUG_LOGS", True)
+    (tmp_path / "bench").mkdir()
+    (tmp_path / "corpus").mkdir()
+    monkeypatch.chdir(tmp_path / "bench")
+    task = {"id": "T1", "cwd": tmp_path / "corpus", "kind": "code", "prompt": "q", "all_of": ["ok"]}
+    b.run_one(task, "S", 1, "sonnet", 10, 1.0, 10, out=Path("results"))
+    cmd = seen[0]
+    assert cmd[cmd.index("--debug-file") + 1] == str(tmp_path / "bench" / "results" / "debug" / "T1-S-1.txt")

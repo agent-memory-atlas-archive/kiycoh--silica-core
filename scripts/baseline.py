@@ -321,13 +321,15 @@ def write_manifest(out: Path, args: dict, tasks: list[dict]) -> Path:
 
 GUIDANCE_FILE = ""  # --guidance: appended to the system prompt of arms A and S, as arm Z gets zvec's
 EFFORT = ""  # --effort: the client's reasoning effort, every arm alike; empty leaves the client's default
+DEBUG_LOGS = False  # --debug-logs: each run's client debug log under <out>/debug/, every arm alike
 
 
 def command(arm: str, model: str, max_turns: int, budget: float,
-            skills: bool = True, plugin_dir: str = "") -> list[str]:
+            skills: bool = True, plugin_dir: str = "", debug_file: str = "") -> list[str]:
     base = ["claude", "-p", "--model", model, "--max-turns", str(max_turns),
             "--max-budget-usd", str(budget), "--output-format", "stream-json", "--verbose",
-            "--no-session-persistence"] + (["--effort", EFFORT] if EFFORT else []) + ([] if skills else ["--disable-slash-commands"])
+            "--no-session-persistence"] + (["--effort", EFFORT] if EFFORT else []) + ([] if skills else ["--disable-slash-commands"]) + (
+        ["--debug-file", debug_file] if debug_file else [])
     off = ["--settings", json.dumps({"enabledPlugins": {PLUGIN_KEY: False}})]
     if arm == "Z":
         return base + off + ["--mcp-config", ZG_MCP, "--allowedTools", ",".join(NATIVE_TOOLS + ZG_TOOLS)] + (
@@ -366,8 +368,12 @@ def run_one(task: dict, arm: str, rep: int, model: str, max_turns: int, budget: 
             timeout: int, skills: bool = True, plugin_dir: str = "", out: Path | None = None) -> dict:
     # The prompt goes on stdin: `--allowedTools` is variadic and would swallow
     # a trailing positional prompt (measured 2026-09-09: "Input must be provided").
+    debug_file = ""
+    if DEBUG_LOGS and out is not None:  # what the client's hooks did in this run: a mod's skips are logged only there
+        (out / "debug").mkdir(parents=True, exist_ok=True)
+        debug_file = str((out / "debug" / f"{task['id']}-{arm}-{rep}.txt").resolve())
     t0 = time.time()
-    proc = subprocess.run(command(arm, model, max_turns, budget, skills, plugin_dir),
+    proc = subprocess.run(command(arm, model, max_turns, budget, skills, plugin_dir, debug_file),
                           cwd=task["cwd"],
                           input=(FORCED if arm == "F" else PACK if arm == "P" else "")
                           + PREAMBLE + task["prompt"],
@@ -482,6 +488,7 @@ def main() -> int:
     ap.add_argument("--effort", default="", help="claude --effort for every run (low, medium, high, xhigh, max); empty = the client's default")
     ap.add_argument("--guidance", default="", help="a file appended to the system prompt of arms A and S (the block silica-core setup claude writes)")
     ap.add_argument("--out", default="", help="results folder; default docs/baseline/<stamp>")
+    ap.add_argument("--debug-logs", action="store_true", help="keep each run's client debug log under <out>/debug/")
     ap.add_argument("--no-skills", action="store_true", help="disable every skill in both arms")
     ap.add_argument("--plugin-dir", default="", help="load the plugin from this checkout instead of the installed one")
     ap.add_argument("--set", default="base", choices=["base", "hard", "swe"], help="task set")
@@ -490,9 +497,10 @@ def main() -> int:
     if a.summary:
         print(summarize(Path(a.summary)))
         return 0
-    global GUIDANCE_FILE, EFFORT
+    global GUIDANCE_FILE, EFFORT, DEBUG_LOGS
     GUIDANCE_FILE = str(Path(a.guidance).resolve()) if a.guidance else ""
     EFFORT = a.effort
+    DEBUG_LOGS = a.debug_logs
     out = Path(a.out) if a.out else REPO / "docs" / "baseline" / time.strftime("%Y-%m-%d-%H%M")
     out.mkdir(parents=True, exist_ok=True)
     runs = out / "runs.jsonl"
