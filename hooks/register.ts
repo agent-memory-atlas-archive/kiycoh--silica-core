@@ -1,3 +1,4 @@
+import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 import { GUIDANCE, START } from './guidance.ts'
 
@@ -22,7 +23,58 @@ async function claudeMdHoldsTheBlock($: EngineInterface): Promise<boolean> {
   return String(text).includes(START)
 }
 
+// Lever 5: the folder that holds hooks/ is the plugin root (the module does not
+// see CLAUDE_PLUGIN_ROOT), and init runs through mcp.json's own launch, extras
+// included, so uv never re-syncs the environment the server shares
+const PLUGIN_ROOT = decodeURIComponent(new URL('..', import.meta.url).pathname).replace(/\/$/, '').replace(/^\/([A-Za-z]:)/, '$1')
+const INIT = ['uv', 'run', '--project', PLUGIN_ROOT, '--extra', 'mcp', '--extra', 'dense', 'silica-core', 'init']
+const offer = atom({ plugin: 'silica-core', key: 'offer' } as const, 'hidden')
+
+async function adopt($: EngineInterface): Promise<{ isIndexed: boolean; text: string }> {
+  const root = await $.session.root()
+  const r = await $.process.run(INIT, { cwd: root, timeoutMs: 600_000 })
+    .catch(err => ({ exitCode: 1, stderr: String(err) }))
+  return r.exitCode === 0
+    ? { isIndexed: true, text: `${root} is indexed; silica_search serves it from its next call.` }
+    : { isIndexed: false, text: `silica-core init failed in ${root}: ${r.stderr.trim().split('\n').at(-1) ?? ''}` }
+}
+
 export const register: Register = (on) => {
+  on('session.start', async ($, e, next) => {
+    await $.command.register({ name: 'silica-init', description: 'Index this folder for silica-core (runs silica-core init)' })
+    const root = await $.session.root()
+    const home = (await $.env.get('HOME')) ?? (await $.env.get('USERPROFILE'))
+    const isAsked = e.isInteractive && root !== '/' && root !== home
+      && !(await adopted($)) && !(await $.store.get(`dismissed:${root}`))
+    await update($, offer, () => (isAsked ? 'offer' : 'hidden'))
+    return next(e)
+  })
+
+  on('command.run', { command: 'silica-init' }, async ($) => {
+    const r = await adopt($)
+    if (r.isIndexed) await update($, offer, () => 'hidden')
+    return { text: r.text }
+  })
+
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    const phase = await read($, offer)
+    if (phase === 'hidden' || e.props.hasSurvey) return next(e)
+    const { Box, Button, Text } = $.ui.resolve(e)
+    if (phase === 'indexing') return h(Box, {}, h(Text, { dimColor: true }, 'silica-core: indexing this folder…'))
+    return h(Box, {},
+      h(Text, {}, 'silica-core: this folder is not indexed. '),
+      h(Button, { key: 'index', label: 'Index', variant: 'primary', onPress: async () => {
+        await update($, offer, () => 'indexing')
+        const r = await adopt($)
+        $.ui.toast(r.text)  // the engine names the plugin in front of it
+        await update($, offer, () => (r.isIndexed ? 'hidden' : 'offer'))
+      } }),
+      h(Button, { key: 'dismiss', label: 'Not here', onPress: async () => {
+        await $.store.set(`dismissed:${await $.session.root()}`, true)
+        await update($, offer, () => 'hidden')
+      } }))
+  })
+
   on('prompt.submit', async ($, e, next) => {
     const text = e.text.trim()
     if (!text || !QUESTION.test(text) || IDENTIFIER.test(text)) return next(e)

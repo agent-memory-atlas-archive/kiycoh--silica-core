@@ -13,5 +13,6 @@
     "agents"
   ],
   "skills": "./silica_core/skills",
-  "mcpServers": "./mcp.json"
+  "mcpServers": "./mcp.json",
+  "types": "./hooks/types.d.ts"
 }

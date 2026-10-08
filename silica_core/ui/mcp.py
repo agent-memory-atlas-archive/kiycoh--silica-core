@@ -120,7 +120,8 @@ def root_gate(retrieval: str):
         nonlocal started
         if not initialised(root):
             return json.dumps({"error": {"code": "not_initialised", "hint": (
-                f"{root} is not a silica root: run `silica-core init` there once, or start the "
+                f"{root} is not a silica root: run `silica-core init` there once (in Claude Code with the "
+                "plugin: /silica-init), or start the "
                 "session in a folder that has vault.yaml")}, "root": str(root)})
         if not started:
             started = True
@@ -131,7 +132,7 @@ def root_gate(retrieval: str):
 
 
 NOT_A_ROOT = (" This folder is not a silica root: every tool replies not_initialised until "
-              "`silica-core init` runs in it.")
+              "`silica-core init` runs in it (in Claude Code with the plugin: /silica-init).")
 
 
 def make_server(extended: bool = False, retrieval: str = "lexical"):

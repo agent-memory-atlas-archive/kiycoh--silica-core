@@ -66,3 +66,12 @@ def test_a_comment_only_vault_yaml_is_an_empty_manifest(tmp_path, caplog):
     with caplog.at_level("WARNING", logger="silica_core.kernel.vault_manifest"):
         m = load_manifest(tmp_path)
     assert m.sources == ("prose",) and m.write_dir == "" and not caplog.records
+
+
+def test_the_refusal_names_the_plugins_one_step_too(tmp_path, monkeypatch):
+    # a plugin-only install has no `silica-core` on PATH: the step it can take
+    # is the mod's /silica-init (ADR-0001, lever 5)
+    from silica_core.ui import mcp
+    monkeypatch.setattr(CONFIG, "vault_path", str(tmp_path))
+    refused = json.loads(mcp.root_gate("lexical")())
+    assert "/silica-init" in refused["error"]["hint"] and "/silica-init" in mcp.NOT_A_ROOT

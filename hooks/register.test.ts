@@ -88,3 +88,100 @@ describe('the guidance section', () => {
     expect((await $.prompt.compose(req([SEARCH]))).sections).toEqual(ENGINE)
   })
 })
+
+describe('the index offer', () => {
+  const HOME = '/home/u'
+  // the plugin root, as the module finds it: the folder that holds hooks/
+  const PLUGIN_ROOT = decodeURIComponent(new URL('..', import.meta.url).pathname).replace(/\/$/, '')
+  const INIT = ['uv', 'run', '--project', PLUGIN_ROOT, '--extra', 'mcp', '--extra', 'dense', 'silica-core', 'init']
+  const BAND = { hasSurvey: false, isWorking: false, maxRows: 10, bodyColumns: 80, scroll: { offset: 0, bodyRows: 10 }, view: {} }
+
+  // beneath the plugin: a folder (adopted or not), HOME, a store kept in
+  // memory, and `silica-core init` answering with `exitCode`
+  function folder(on: On, opts: { root?: string; adopted?: boolean; exitCode?: number } = {}) {
+    const root = opts.root ?? ROOT
+    const store = new Map<string, unknown>()
+    const runs: { argv: readonly string[]; cwd?: string }[] = []
+    const commands: string[] = []
+    on('session.root', () => ({ value: root }))
+    on('fs.exists', ($, e) => ({ value: !!opts.adopted && e.path === `${root}/vault.yaml` }))
+    on('env.get', ($, e) => ({ value: e.name === 'HOME' ? HOME : undefined }))
+    on('store.get', ($, e) => ({ value: store.get(e.key) }))
+    on('store.set', ($, e) => { store.set(e.key, e.value); return { value: undefined } })
+    on('process.run', ($, e) => {
+      runs.push({ argv: e.argv, cwd: e.init?.cwd })
+      return { value: { exitCode: opts.exitCode ?? 0, stdout: '{"docs": 3}', stderr: 'no uv', isStdoutTruncated: false, isStderrTruncated: false } }
+    })
+    on('command.register', ($, e) => { commands.push(e.name); return { value: undefined } })
+    on('ui.toast', () => ({ value: undefined }))
+    on('session.start', ($, e) => ({ cwd: e.cwd }))
+    on('command.run', () => ({ text: '' }))
+    on('ui.render', ($, e) => h($.ui.resolve(e).Box, {}))  // the engine's band: empty
+    return { runs, commands }
+  }
+
+  const start = ($: any, isInteractive = true) =>
+    $.session.start({ cwd: ROOT, surface: isInteractive ? 'terminal' : null, isInteractive })
+  const band = ($: any, surface: 'terminal' | 'desktop') =>
+    $.ui.mount({ plugin: 'silica-core', surface, component: 'AbovePrompt', props: BAND })
+
+  test('an unadopted folder is offered, and Index runs silica-core init there, then the offer goes', async ($, on) => {
+    const { runs } = folder(on)
+    for (const surface of ['terminal', 'desktop'] as const) {
+      await start($)
+      const ui = await band($, surface)
+      expect(await ui.find({ key: 'index' })).toBeDefined()
+      await ui.press({ key: 'index' })
+      expect(runs.at(-1)).toEqual({ argv: INIT, cwd: ROOT })
+      expect(await ui.find({ key: 'index' })).toBeUndefined()
+      await ui.unmount()
+    }
+  })
+
+  test('an adopted folder is offered nothing', async ($, on) => {
+    folder(on, { adopted: true })
+    await start($)
+    expect(await (await band($, 'terminal')).find({ key: 'index' })).toBeUndefined()
+  })
+
+  test('HOME itself is never offered', async ($, on) => {
+    folder(on, { root: HOME })
+    await start($)
+    expect(await (await band($, 'terminal')).find({ key: 'index' })).toBeUndefined()
+  })
+
+  test('a session nobody can answer is offered nothing', async ($, on) => {
+    folder(on)
+    await start($, false)
+    expect(await (await band($, 'terminal')).find({ key: 'index' })).toBeUndefined()
+  })
+
+  test('Not here hides the offer and the next session in that folder remembers it', async ($, on) => {
+    const { runs } = folder(on)
+    await start($)
+    const ui = await band($, 'terminal')
+    await ui.press({ key: 'dismiss' })
+    expect(await ui.find({ key: 'index' })).toBeUndefined()
+    await start($)
+    expect(await (await band($, 'terminal')).find({ key: 'index' })).toBeUndefined()
+    expect(runs).toEqual([])
+  })
+
+  test('a failed init puts the offer back', async ($, on) => {
+    folder(on, { exitCode: 1 })
+    await start($)
+    const ui = await band($, 'terminal')
+    await ui.press({ key: 'index' })
+    expect(await ui.find({ key: 'index' })).toBeDefined()
+  })
+
+  test('/silica-init adopts the folder from the prompt', async ($, on) => {
+    const { runs, commands } = folder(on)
+    await start($)
+    expect(commands).toContain('silica-init')
+    const r = await $.command.run({ command: 'silica-init', args: '', origin: { kind: 'composer' },
+                                     presentation: { isFullscreen: false, columns: 80 } })
+    expect(runs.at(-1)).toEqual({ argv: INIT, cwd: ROOT })
+    expect(r.text).toContain(ROOT)
+  })
+})
