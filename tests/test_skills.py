@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -13,7 +14,8 @@ from silica_core.kernel import skills
 from silica_core.kernel.write.frontmatter import split
 
 ROOT = Path(__file__).resolve().parent.parent
-BUILTINS = {"compare", "diagram", "explain", "relate", "schematize", "summarize"}
+HARNESS = {"silica", "compare", "diagram", "explain", "schematize", "summarize"}
+INTERNAL = {"relate"}   # names silica-internal's tools: debt toward that tree (ADR-0002)
 
 
 def _skill(root: Path, folder: str, body: str = "Do it: $ARGUMENTS", **front) -> Path:
@@ -26,29 +28,56 @@ def _skill(root: Path, folder: str, body: str = "Do it: $ARGUMENTS", **front) ->
     return path
 
 
-def test_the_builtins_are_the_converted_commands_and_not_the_plugin_skill():
-    found = skills.discover(None)
-    assert set(found) == BUILTINS
-    assert {s.source for s in found.values()} == {"builtin"}
-    assert "silica" not in found   # the skill other agents load is not a command here
+def _front(path: Path) -> dict:
+    data, _, _ = split(path.read_text(encoding="utf-8"))
+    return data
 
 
-def test_no_builtin_sits_where_the_plugin_manifests_look():
-    """Both manifests hand their `skills` folder to Claude Code and Codex. A
-    built-in there would ship to every plugin user, naming silica_flag_note,
-    which this package's server does not serve."""
+def test_the_harness_skills_are_where_both_plugin_manifests_look():
+    """ADR-0002: one folder serves silica's loop and every harness."""
     for manifest in (".claude-plugin/plugin.json", ".codex-plugin/plugin.json"):
         served = (ROOT / json.loads((ROOT / manifest).read_text())["skills"]).resolve()
-        assert not skills.BUILTIN.resolve().is_relative_to(served), manifest
+        assert served == skills.SKILLS.resolve(), manifest
+    assert {p.parent.name for p in skills.SKILLS.glob("*/SKILL.md")} == HARNESS
+    assert {p.parent.name for p in skills.BUILTIN.glob("*/SKILL.md")} == INTERNAL
 
 
-def test_every_builtin_is_hidden_from_npx_skills():
-    """`npx skills add kiycoh/silica-core` falls back to a recursive search,
-    which would offer these next to the plugin skill; `metadata.internal`
-    keeps them out unless INSTALL_INTERNAL_SKILLS=1."""
+def test_silicas_loop_reads_the_same_folder_and_relate():
+    found = skills.discover(None)
+    assert set(found) == HARNESS - {"silica"} | INTERNAL
+    assert "silica" not in found   # it teaches another agent the tools silica's own prompt already carries
+    assert {s.source for s in found.values()} == {"builtin"}
+    assert found["explain"].path.parent.parent.resolve() == skills.SKILLS.resolve()
+
+
+def test_every_harness_skill_is_discoverable_and_says_what_it_needs():
+    """Agent Skills: description up to 1,024 characters, compatibility up to
+    500, metadata a map of strings. No `internal`, which hides a skill from
+    `npx skills`; the marker lets setup refresh its own copies and nothing
+    else."""
+    for path in skills.SKILLS.glob("*/SKILL.md"):
+        data = _front(path)
+        assert data["name"] == path.parent.name, path
+        assert 0 < len(data["description"]) <= 1024, path
+        assert "internal" not in (data.get("metadata") or {}), path
+        assert data["metadata"]["silica-core-managed"] == "true", path
+        assert isinstance(data["compatibility"], str) and 0 < len(data["compatibility"]) <= 500, path
+        assert "silica-core MCP server" in data["compatibility"], path
+
+
+def test_a_harness_skill_names_only_tools_silica_core_serves():
+    """Neither Agent Skills nor SEP-2640 can declare a skill's tools, so this
+    is the check: a harness gets the skill only with the tools it calls."""
+    from silica_core.ui.mcp import exposed_tools
+    served = set(exposed_tools(False))
+    for path in skills.SKILLS.glob("*/SKILL.md"):
+        named = set(re.findall(r"\bsilica_[a-z_]+", path.read_text(encoding="utf-8"))) - {"silica_core"}
+        assert named <= served, f"{path.parent.name} names {sorted(named - served)}, which silica-core does not serve"
+
+
+def test_relate_stays_hidden_from_npx_skills():
     for path in skills.BUILTIN.glob("*/SKILL.md"):
-        data, _, _ = split(path.read_text(encoding="utf-8"))
-        assert data["metadata"]["internal"] is True, path
+        assert _front(path)["metadata"]["internal"] is True, path
 
 
 def test_nearest_root_wins(tmp_path, monkeypatch):

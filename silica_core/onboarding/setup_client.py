@@ -317,16 +317,73 @@ def _dsh_skills() -> Path:
     return Path.home() / ".agents" / "skills"
 
 
+def _managed(skill_md: Path) -> bool:
+    """Whether setup wrote this SKILL.md: its `metadata.silica-core-managed`."""
+    from silica_core.kernel.write.frontmatter import split
+    try:
+        data, _, _ = split(skill_md.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError):
+        return False
+    return isinstance(data, dict) and (data.get("metadata") or {}).get("silica-core-managed") == "true"
+
+
+# silica-core's `silica` skill has opened with this heading since 2026-09; the
+# four versions before it shared "vault memory over MCP" with silica-internal's
+# own `silica` skill, which that tree installs into ~/.agents/skills, the root
+# dsh shares. Only this heading marks an unmarked copy as setup's.
+LEGACY_HEADING = "# Silica: located evidence, no model"
+
+
+def _ours(skill_md: Path) -> bool:
+    """Whether setup wrote this copy: the marker, or silica-core's `silica`
+    copied before the marker existed."""
+    if _managed(skill_md):
+        return True
+    try:
+        return skill_md.parent.name == "silica" and LEGACY_HEADING in skill_md.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return False
+
+
 def install_skill(root: Path) -> Path:
-    """Copy the skill into one client's skill root. Claude Code gets it from
-    the plugin instead. A copy and not a symlink: the package path moves on
-    upgrade and symlinks need privileges on Windows; rerunning setup refreshes
-    it. For every other harness `npx skills add kiycoh/silica-core` knows more
-    roots than this file ever will."""
-    dest = root / "silica" / "SKILL.md"
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(skill_path(), dest)
-    return dest
+    """Copy every skill silica-core ships (ADR-0002) into one client's skill
+    root. Claude Code gets them from the plugin instead. A copy and not a
+    symlink: the package path moves on upgrade and symlinks need privileges on
+    Windows; rerunning setup refreshes them. A same-named folder setup did not
+    write is left alone: `explain` is a generic name, and another harness may
+    install its own `silica`. For every other harness `npx skills add
+    kiycoh/silica-core` knows more roots than this file ever will."""
+    from silica_core.kernel.skills import SKILLS
+    for src in sorted(SKILLS.glob("*/SKILL.md")):
+        dest = root / src.parent.name
+        if (dest / "SKILL.md").exists() and not _ours(dest / "SKILL.md"):
+            _say(f"  ⚠ left {escape(str(dest))} alone: a skill of that name that silica-core did not write")
+            continue
+        shutil.copytree(src.parent, dest, dirs_exist_ok=True)
+    return root
+
+
+def _codex_plugin_on(config: Path) -> bool:
+    """An enabled `[plugins."silica-core@<marketplace>"]` table in Codex's config."""
+    try:
+        data = tomllib.loads(config.read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError):
+        return False
+    return any(k.startswith(f"{NAME}@") and isinstance(v, dict) and v.get("enabled", True) is not False
+               for k, v in (data.get("plugins") or {}).items())
+
+
+def retire_skills(root: Path) -> list[str]:
+    """Remove setup's own copies from a root a plugin now serves (ADR-0002):
+    Codex lists the plugin's as silica-core:<name> and a copy again as <name>."""
+    from silica_core.kernel.skills import SKILLS
+    gone = []
+    for src in sorted(SKILLS.glob("*/SKILL.md")):
+        dest = root / src.parent.name
+        if (dest / "SKILL.md").exists() and _ours(dest / "SKILL.md"):
+            shutil.rmtree(dest)
+            gone.append(dest.name)
+    return gone
 
 
 def _default_path(client: str) -> Path:
@@ -726,5 +783,10 @@ def run_setup(args: list[str]) -> int:
     # Also on "already configured": rerunning setup is how the skill copy
     # follows a package upgrade.
     if rc == 0 and not dry_run and skills is not None:
-        _say(f"  ✓ skill installed at {escape(str(install_skill(skills())))}")
+        if client == "codex" and _codex_plugin_on(path):
+            gone = retire_skills(skills())
+            _say("  the Codex plugin silica-core carries the skills: no copy"
+                 + (f"; removed setup's earlier copies ({', '.join(gone)})" if gone else ""))
+        else:
+            _say(f"  ✓ skills installed in {escape(str(install_skill(skills())))}")
     return rc

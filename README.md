@@ -183,8 +183,10 @@ Every written block, and the Claude Code plugin, run `silica-core mcp --retrieva
 local-hybrid`: `potion-retrieval-32M` in the server process, index and
 vectors built in the background at start, the search lexical and `dense:
 warming` until they land. Nothing leaves the machine; the one download is
-the model, once. `npx skills add kiycoh/silica-core` installs the skill that
-tells an agent when to reach for the tools, and nothing else. Shell recipes,
+the model, once. `npx skills add kiycoh/silica-core` installs the skills (the one
+that tells an agent when to reach for the tools, and five that explain,
+summarize, compare, schematize and diagram from the indexed documents), and
+nothing else. Shell recipes,
 Docker and the REPL are in [public/harnesses.md](public/harnesses.md).
 
 ## Notes

@@ -1,7 +1,7 @@
 {
   "name": "silica-core",
   "version": "0.10.0",
-  "description": "Retrieval tools for coding agents, no model in the loop: files, search, read, code_pack and write_note over the folder the session is opened in, served over MCP, plus a skill that teaches when to search and how to read coverage.",
+  "description": "Retrieval tools for coding agents, no model in the loop: files, search, read, code_pack and write_note over the folder the session is opened in, served over MCP, plus skills: one that teaches when to search and how to read coverage, and five that explain, summarize, compare, schematize and diagram from the indexed documents.",
   "author": {
     "name": "Alessandro Carosia"
   },

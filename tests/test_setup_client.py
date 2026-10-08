@@ -229,6 +229,87 @@ def test_the_skill_lands_in_the_root_each_client_actually_reads(tmp_path, monkey
     assert not (tmp_path / ".agents" / "skills" / "silica-core").exists()
 
 
+def test_setup_installs_every_harness_skill(tmp_path, monkeypatch):
+    """ADR-0002: a client without the plugin gets each skill the plugin ships."""
+    from silica_core.kernel import skills
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv("CODEX_HOME", raising=False)
+    assert setup_client.run_setup(["codex", "--config", str(tmp_path / "config.toml")]) == 0
+    for src in skills.SKILLS.glob("*/SKILL.md"):
+        dest = tmp_path / ".codex" / "skills" / src.parent.name / "SKILL.md"
+        assert dest.read_text(encoding="utf-8") == src.read_text(encoding="utf-8"), src.parent.name
+
+
+def test_a_users_own_skill_of_the_same_name_is_left_alone(tmp_path, monkeypatch, capsys):
+    """`explain` is a generic name: only a folder carrying setup's marker is
+    setup's to refresh."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv("CODEX_HOME", raising=False)
+    mine = tmp_path / ".codex" / "skills" / "explain" / "SKILL.md"
+    mine.parent.mkdir(parents=True)
+    mine.write_text("---\nname: explain\ndescription: my own\n---\nmine\n", encoding="utf-8")
+    stale = tmp_path / ".codex" / "skills" / "summarize" / "SKILL.md"
+    stale.parent.mkdir(parents=True)
+    stale.write_text('---\nname: summarize\nmetadata:\n  silica-core-managed: "true"\n---\nold\n', encoding="utf-8")
+    legacy = tmp_path / ".codex" / "skills" / "silica" / "SKILL.md"   # setup wrote it before the marker existed
+    legacy.parent.mkdir(parents=True)
+    legacy.write_text("---\nname: silica\ndescription: older\n---\n# Silica: located evidence, no model\nold\n", encoding="utf-8")
+    assert setup_client.run_setup(["codex", "--config", str(tmp_path / "config.toml")]) == 0
+    assert mine.read_text(encoding="utf-8").endswith("mine\n")
+    assert "explain" in capsys.readouterr().out
+    from silica_core.kernel import skills
+    assert stale.read_text(encoding="utf-8") == (skills.SKILLS / "summarize" / "SKILL.md").read_text(encoding="utf-8")
+    assert legacy.read_text(encoding="utf-8") == setup_client.skill_path().read_text(encoding="utf-8")
+
+
+def test_codex_with_the_plugin_gets_no_second_copy_of_the_skills(tmp_path, monkeypatch, capsys):
+    """codex-cli 0.157.1 lists a plugin skill as `silica-core:explain` and a
+    copied one as `explain` (debug prompt-input, 2026-10-08): with both, the
+    model sees every skill twice (ADR-0002, rule 8)."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv("CODEX_HOME", raising=False)
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('[plugins."silica-core@silica-core"]\nenabled = true\n', encoding="utf-8")
+    assert setup_client.run_setup(["codex", "--config", str(cfg)]) == 0
+    assert not (tmp_path / ".codex" / "skills").exists()
+    assert "plugin" in capsys.readouterr().out
+
+
+def test_a_disabled_codex_plugin_still_gets_the_copies(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv("CODEX_HOME", raising=False)
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('[plugins."silica-core@silica-core"]\nenabled = false\n', encoding="utf-8")
+    assert setup_client.run_setup(["codex", "--config", str(cfg)]) == 0
+    assert (tmp_path / ".codex" / "skills" / "explain" / "SKILL.md").exists()
+
+
+def test_the_codex_plugin_retires_setups_earlier_copies(tmp_path, monkeypatch):
+    """Copies made before the plugin went in would keep every skill listed
+    twice; setup's own (marked, or silica-core's silica) go, a user's stay."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv("CODEX_HOME", raising=False)
+    cfg = tmp_path / "config.toml"
+    assert setup_client.run_setup(["codex", "--config", str(cfg)]) == 0
+    root = tmp_path / ".codex" / "skills"
+    (root / "explain" / "SKILL.md").write_text("---\nname: explain\ndescription: mine\n---\nmine\n", encoding="utf-8")
+    cfg.write_text(cfg.read_text(encoding="utf-8") + '\n[plugins."silica-core@silica-core"]\nenabled = true\n', encoding="utf-8")
+    assert setup_client.run_setup(["codex", "--config", str(cfg)]) == 0
+    assert sorted(p.name for p in root.iterdir()) == ["explain"]
+
+
+def test_another_harness_silica_skill_is_never_overwritten(tmp_path, monkeypatch):
+    """silica-internal installs its own `silica` skill into ~/.agents/skills,
+    the root dsh shares; only silica-core's own heading marks a copy as setup's."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    theirs = tmp_path / ".agents" / "skills" / "silica" / "SKILL.md"
+    theirs.parent.mkdir(parents=True)
+    body = "---\nname: silica\ndescription: Use the Silica vault as persistent memory\n---\n# Silica: vault memory over MCP\n"
+    theirs.write_text(body, encoding="utf-8")
+    assert setup_client.run_setup(["dsh", "--config", str(tmp_path / "cordis.patch.yml")]) == 0
+    assert theirs.read_text(encoding="utf-8") == body
+
+
 def test_codex_home_moves_the_skill_with_it(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("CODEX_HOME", str(tmp_path / "elsewhere"))

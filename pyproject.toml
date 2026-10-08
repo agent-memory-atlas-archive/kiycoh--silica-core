@@ -76,9 +76,9 @@ Repository = "https://github.com/kiycoh/silica-core"
 Issues = "https://github.com/kiycoh/silica-core/issues"
 
 [tool.setuptools]
-# skills/ (the harness skill the setup command installs) and builtin_skills/
-# (the slash commands silica's own loop expands, kernel/skills.py) are
-# non-package subdirs: include-package-data ships every tracked file in them.
+# skills/ (every skill a harness gets, which silica's own loop expands too,
+# ADR-0002) and builtin_skills/ (silica's loop only) are non-package subdirs:
+# include-package-data ships every tracked file in them.
 include-package-data = true
 
 [tool.setuptools.packages.find]

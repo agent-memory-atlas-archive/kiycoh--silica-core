@@ -1,6 +1,9 @@
 ---
 name: silica
 description: Search local documents for cited passages, compare sources, or investigate whether the corpus supports a claim. With code indexing enabled, use first to locate a behavior or implementation when its symbol name is unknown. Use grep for exact strings or known symbol names; read directly when the relevant path and section are already known.
+compatibility: "Requires the silica-core MCP server (silica_files, silica_search, silica_read, silica_code_pack, silica_write_note)."
+metadata:
+  silica-core-managed: "true"
 ---
 
 # Silica: located evidence, no model

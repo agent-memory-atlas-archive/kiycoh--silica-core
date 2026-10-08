@@ -1,13 +1,14 @@
 ---
 name: diagram
-description: Mermaid diagram of a note, folder, or topic
+description: "Draw one Mermaid diagram, or a table where a diagram is the wrong form, of a mechanism, process, hierarchy or timeline that a note, a folder or a topic in the folder silica-core indexes describes. Use when the user asks to visualize, map or diagram something these documents cover; --save=<path> also writes it as a note."
 argument-hint: "<note|folder|topic> [--save=<path>]"
+compatibility: "Requires the silica-core MCP server (silica_files, silica_search, silica_read; silica_write_note for --save)."
 metadata:
-  internal: true
+  silica-core-managed: "true"
 ---
-Diagram from the vault: $ARGUMENTS
+Diagram from the indexed folder: $ARGUMENTS
 
-Resolve the target: it may be a note (path or title), a folder (list and skim its notes), or a general topic (search the vault, then read the top matches).
+Resolve the target: it may be a note (path or title), a folder (list it with silica_files and skim its notes), or a general topic (search with silica_search, then read the top matches with silica_read).
 Pick the form from the relation the reader has to follow, not from the topic:
 - how a mechanism works, a cause and its effects, a route: `flowchart`, the parts as nodes and the actions as labelled arrows in the causal direction
 - states and what moves between them: `stateDiagram-v2`

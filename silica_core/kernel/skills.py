@@ -12,16 +12,19 @@ no placeholder receives them gets `ARGUMENTS: <text>` appended.
 `argument-hint` is what a picker shows; here it also marks the arguments a
 skill cannot run without: every `<...>` outside a `[...]`.
 
-Three roots, nearest first, and the first folder of a name wins, so a vault
-or the home dir can shadow a built-in the way the distill profiles do:
+Roots, nearest first, and the first folder of a name wins, so a vault or
+the home dir can shadow a built-in the way the distill profiles do:
 
     <vault>/.silica/skills/   this vault only
     ~/.silica/skills/         every vault
-    builtin_skills/           this package
+    skills/                   this package: what every harness gets too
+    builtin_skills/           this package: silica's loop only
 
-The built-ins are not under skills/: the plugin manifests hand that folder to
-Claude Code and Codex, and these name tools the MCP server here does not
-serve (silica_flag_note).
+skills/ is the one source (ADR-0002): the plugin manifests hand it to Claude
+Code and Codex, `silica-core setup` copies it, `npx skills` finds it, and a
+test holds each skill there to the tools this package's MCP server serves.
+builtin_skills/ keeps what names silica-internal's tools (relate), as debt
+toward that tree.
 
 Nothing in a skill folder runs. Claude Code's !`command` injection is left
 out because a vault can shadow a built-in, and a vault is not always its
@@ -37,6 +40,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+SKILLS = Path(__file__).resolve().parent.parent / "skills"
 BUILTIN = Path(__file__).resolve().parent.parent / "builtin_skills"
 
 # Agent Skills' name rule. The name is also the command and a path component,
@@ -63,7 +67,7 @@ def roots(vault: str | Path | None = None) -> list[tuple[str, Path]]:
     from silica_core.kernel.recall import paths   # read per call: the test suite rebinds the home
 
     out = [("vault", Path(vault) / ".silica" / "skills")] if vault else []
-    return out + [("home", paths._SILICA_HOME / "skills"), ("builtin", BUILTIN)]
+    return out + [("home", paths._SILICA_HOME / "skills"), ("builtin", SKILLS), ("builtin", BUILTIN)]
 
 
 def _skip(path: Path, why: str) -> None:
@@ -111,6 +115,8 @@ def discover(vault: str | Path | None = None) -> dict[str, Skill]:
         for path in sorted(root.glob("*/SKILL.md")):
             if path.parent.name in found:
                 continue
+            if root == SKILLS and path.parent.name == "silica":
+                continue   # it teaches another agent these tools; silica's own prompt carries them
             skill = load(path, source)
             if skill is not None:
                 found[skill.name] = skill

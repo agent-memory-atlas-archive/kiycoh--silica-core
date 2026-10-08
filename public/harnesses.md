@@ -74,18 +74,25 @@ Cursor and Windsurf also read a project rule file (`.cursor/rules/silica.mdc`,
 `.windsurfrules`). Those are yours, not your home's, so `setup` names them
 rather than writing them; the content is `silica_core/skills/silica/SKILL.md`.
 
-## The skill
+## The skills
 
-`SKILL.md` is the wording that tells an agent when to reach for the tools.
-`setup` installs it for the harnesses whose skill root it knows (`codex`,
-`dsh`, `hermes`, `antigravity`). For every other one, [`npx skills`](https://github.com/vercel-labs/skills)
-knows 79 of them:
+`silica_core/skills/` holds them: `silica`, the wording that tells an agent
+when to reach for the tools, and `explain`, `summarize`, `compare`,
+`schematize` and `diagram`, which work from the indexed documents through the
+same tools. The Claude Code and Codex plugins serve them as
+`silica-core:<name>`. `setup` copies them for the harnesses whose skill root
+it knows (`codex`, `dsh`, `hermes`, `antigravity`), leaving alone a skill of
+the same name it did not write. Pick one route per harness: with the Codex
+plugin installed, `setup codex` copies no skills, since the plugin already
+lists them, and the plugin brings its own server too. For every other
+harness, [`npx skills`](https://github.com/vercel-labs/skills) knows 79 of
+them:
 
 ```bash
 npx skills add kiycoh/silica-core
 ```
 
-It installs the skill and nothing else: no package, no server. On its own it
+It installs the skills and nothing else: no package, no server. On its own it
 leaves an agent holding instructions for tools that are not there, so it
 comes after `uv tool install 'silica-core[mcp,dense]'`, not instead of it.
 
