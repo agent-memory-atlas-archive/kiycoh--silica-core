@@ -682,7 +682,8 @@ def silica_search(
     queries: Annotated[list[str] | None, Field(description="More query groups, each ranked on its own and fused with `query` by rank: the concept in one, its identifiers in another")] = None,
 ) -> dict:
     """For a question that names no identifier (what a behaviour is, where
-    it is decided, why), call this before Grep, Read or Glob: it ranks
+    it is decided, why), call this before any grep (a Grep tool, or
+    grep or rg in a shell), Glob or Read: it ranks
     passages and, in a source tree, the functions, methods, classes and
     constants themselves, by the question's words and their vectors.
     Do not grep for the words of a question; grep

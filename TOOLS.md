@@ -87,8 +87,8 @@ the original as `source`. A PDF the index has not read yet is `changed`, not
 
 `silica_search(query, folder="", k=5, per_doc=2, width=600, queries=[])`
 
-For a question that names no identifier, this comes before Grep, Read or
-Glob; grep is for an exact string or a symbol name already known (the
+For a question that names no identifier, this comes before any grep (a
+Grep tool, or grep or rg in a shell), Glob or Read; grep is for an exact string or a symbol name already known (the
 description says so in those words, as does the block `silica-core setup claude`
 writes; measured 2026-09-10, with a prompt hook that carried the same ask
 then and ships no more, it took Sonnet from 0 to 17 searches in 20

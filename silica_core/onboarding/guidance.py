@@ -15,7 +15,7 @@ START = "<!-- SILICA_START -->"
 END = "<!-- SILICA_END -->"
 GUIDANCE = """## silica-core
 
-- For a question about what the files in the current folder say, or how a behaviour is implemented, when no identifier is known: call `silica_search` with the question before Grep, Read or Glob. It ranks passages and, with the code index on, the functions, methods, classes and constants themselves, by the question's words and their vectors; a hit's `section` is the symbol, `span` its lines.
+- For a question about what the files in the current folder say, or how a behaviour is implemented, when no identifier is known: call `silica_search` with the question before any grep (a Grep tool, or grep or rg in a shell), Glob or Read. It ranks passages and, with the code index on, the functions, methods, classes and constants themselves, by the question's words and their vectors; a hit's `section` is the symbol, `span` its lines.
 - Grep for an exact string or a symbol name you already know; read a file directly when its path and section are already known.
 - Cite a hit's passage by path and line when it answers; read with `silica_read(path, section=…)` only for missing context, carrying the hit's `version` as `expect_version`.
 - `terms_absent` and `coverage` are lexical diagnostics, not verdicts: a dense hit can answer with coverage 0. If the passages give no evidence, rephrase once keeping names and identifiers; then report what remains unfound."""
