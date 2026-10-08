@@ -1,3 +1,4 @@
 {
+  "hooks": {},
   "modules": ["./register.ts"]
 }

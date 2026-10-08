@@ -122,3 +122,13 @@ def test_the_shipped_tree_still_has_a_version_without_git():
     scm = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     fallback = scm["tool"]["setuptools_scm"].get("fallback_version")
     assert fallback, "setuptools-scm must not raise where the plugin cache has no .git"
+
+
+def test_hooks_json_names_the_mod_and_stays_valid_for_clients_without_mods():
+    # Claude Code 2.0.77 and 2.1.100 validate hooks.json as `{ hooks: record }`
+    # and log "Failed to load hooks for silica-core" when the key is absent
+    # (measured 2026-10-08); an empty record is valid there, and 2.1.29x reads
+    # `modules` beside it
+    hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))
+    assert hooks.get("hooks") == {}
+    assert hooks["modules"] == ["./register.ts"]
