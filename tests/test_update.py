@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 Alessandro Carosia
 
-"""`silica update` against throwaway git repos.
+"""`silica-core update` against throwaway git repos.
 
 Each test builds a bare remote + an "install" clone tracking origin/main, then
 monkeypatches ``silica_core.update.ROOT`` at the install so update() operates on it.

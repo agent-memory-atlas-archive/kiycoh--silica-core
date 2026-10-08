@@ -1,4 +1,4 @@
-"""`silica setup <client>`: merge, never clobber, and stay idempotent."""
+"""`silica-core setup <client>`: merge, never clobber, and stay idempotent."""
 from __future__ import annotations
 
 import json
@@ -27,7 +27,7 @@ def test_codex_appends_block(tmp_path):
     assert parsed["mcp_servers"]["silica-core"]["command"] == "uvx"
     # The [mcp] extra is the point of the block, and rich markup eats it if the
     # payload is ever printed or written through a markup-enabled path.
-    assert parsed["mcp_servers"]["silica-core"]["args"] == ["--from", "silica-core[mcp,dense]", "silica", "mcp", "--retrieval", "local-hybrid"]
+    assert parsed["mcp_servers"]["silica-core"]["args"] == ["--from", "silica-core[mcp,dense]", "silica-core", "mcp", "--retrieval", "local-hybrid"]
 
 
 def test_no_client_gets_a_pinned_vault(tmp_path):
@@ -58,6 +58,22 @@ def test_codex_is_idempotent(tmp_path):
     once = cfg.read_text(encoding="utf-8")
     assert setup_client.run_setup(["codex", "--config", str(cfg)]) == 0
     assert cfg.read_text(encoding="utf-8") == once
+
+
+def test_an_entry_that_launches_the_old_script_is_named_not_rewritten(tmp_path):
+    """ADR-0067: blocks written before the rename launch `silica mcp`, which no
+    longer exists once uvx resolves a new wheel. Still never clobbered, but no
+    longer reported as configured either."""
+    cfg = tmp_path / "config.toml"
+    old = ('[mcp_servers.silica-core]\ncommand = "uvx"\n'
+           'args = ["--from", "silica-core[mcp,dense]", "silica", "mcp"]\n')
+    cfg.write_text(old, encoding="utf-8")
+    out = _printed(["codex", "--config", str(cfg)])
+    assert "still launches `silica mcp`" in out and "nothing to do" not in out
+    assert cfg.read_text(encoding="utf-8") == old
+
+    setup_client.run_setup(["codex", "--config", str(fresh := tmp_path / "fresh.toml")])
+    assert "nothing to do" in _printed(["codex", "--config", str(fresh)])
 
 
 def test_codex_refuses_broken_toml(tmp_path):
@@ -166,15 +182,17 @@ def test_dsh_default_path_honours_dsh_home(monkeypatch):
 
 def test_the_skill_lands_in_the_root_each_client_actually_reads(tmp_path, monkeypatch):
     """Codex reads $CODEX_HOME/skills (default ~/.codex/skills), DeepSeek
-    Harness the shared ~/.agents/skills. They are not the same root — an
-    earlier version of this file copied both to ~/.agents and Codex never saw
-    it. Claude Code gets the skill from the plugin instead.
+    Harness the shared ~/.agents/skills, Antigravity CLI ~/.gemini/config/skills
+    (agy 1.2.17). They are not the same root — an earlier version of this file
+    copied both to ~/.agents and Codex never saw it. Claude Code gets the skill
+    from the plugin instead.
     """
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.delenv("CODEX_HOME", raising=False)
     wanted = setup_client.skill_path().read_text(encoding="utf-8")
     for client, cfg, root in (("codex", "config.toml", ".codex/skills"),
-                              ("dsh", "cordis.patch.yml", ".agents/skills")):
+                              ("dsh", "cordis.patch.yml", ".agents/skills"),
+                              ("antigravity", "mcp_config.json", ".gemini/config/skills")):
         assert setup_client.run_setup([client, "--config", str(tmp_path / cfg)]) == 0
         assert (tmp_path / root / "silica" / "SKILL.md").read_text(encoding="utf-8") == wanted
     assert not (tmp_path / ".agents" / "skills" / "silica-core").exists()
@@ -196,7 +214,7 @@ def test_dry_run_installs_no_skill(tmp_path, monkeypatch):
 
 def test_from_spec_swaps_the_release_for_a_checkout(tmp_path, capsys):
     out = _printed(["codex", "--config", str(tmp_path / "config.toml"), "--dry-run", "--from", "/src/silica[mcp]"], capsys)
-    assert '"--from", "/src/silica[mcp]", "silica", "mcp"' in out
+    assert '"--from", "/src/silica[mcp]", "silica-core", "mcp"' in out
     assert "silica-core[mcp,dense]" in _printed(["codex", "--config", str(tmp_path / "c2.toml"), "--dry-run"], capsys)
 
 
@@ -247,7 +265,7 @@ def test_the_entry_lands_where_the_client_looks_for_it(tmp_path):
     j = lambda s: json.loads(s)
     y = lambda s: yaml.safe_load(s)
 
-    for client in ("cursor", "windsurf", "claude-desktop", "lmstudio", "gemini", "anythingllm"):
+    for client in ("cursor", "windsurf", "claude-desktop", "lmstudio", "gemini", "anythingllm", "antigravity"):
         entry = written(client, "mcp.json", j)["mcpServers"]["silica-core"]
         assert [entry["command"], *entry["args"]] == setup_client.MCP_COMMAND
 
@@ -372,8 +390,8 @@ def test_dry_run_writes_nothing_for_any_client(tmp_path):
 
 def test_recipes_answer_the_harnesses_with_no_config_file(capsys):
     """Aider, SWE-agent, LangGraph and friends install by instruction, so
-    `silica setup <topic>` prints one rather than failing."""
-    assert "silica search" in _printed(["shell"], capsys)
+    `silica-core setup <topic>` prints one rather than failing."""
+    assert "silica-core search" in _printed(["shell"], capsys)
     assert "silica-core[mcp,dense]" in _printed(["python"], capsys)
     assert "silica-core[mcp,dense]" in _printed(["generic"], capsys)
 
@@ -389,7 +407,7 @@ def test_the_harness_census_and_the_command_agree(page):
     """The pages that list the harnesses are the census the table implements.
 
     Both directions: a client absent from the page is one nobody finds, and a
-    `silica setup X` on the page that X does not answer is a broken instruction
+    `silica-core setup X` on the page that X does not answer is a broken instruction
     printed to a reader who then has nowhere to go.
 
     README.md ships; /docs is gitignored, so that half of the check guards the
@@ -405,7 +423,7 @@ def test_the_harness_census_and_the_command_agree(page):
     # The README names clients in table cells, the census in prose, so the
     # forward check takes either; only the unambiguous phrasing can be read
     # backwards, since a page is full of backticks that are not client names.
-    spelled = set(re.findall(r"silica setup ([a-z][a-z-]*)", doc))
+    spelled = set(re.findall(r"silica-core setup ([a-z][a-z-]*)", doc))
     named = spelled | set(re.findall(r"`([a-z][a-z-]*)`", doc))
     assert known <= named, f"{page} does not name: {sorted(known - named)}"
     assert spelled <= known, f"{page} promises a client that does not exist: {sorted(spelled - known)}"

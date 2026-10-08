@@ -13,7 +13,7 @@ def test_ws_port_from_env(monkeypatch):
 
 def test_ws_token_default_empty_means_generate(monkeypatch):
     monkeypatch.delenv("SILICA_WS_TOKEN", raising=False)
-    assert SilicaConfig().ws_token == ""  # empty → `silica connect` mints one
+    assert SilicaConfig().ws_token == ""  # empty → `silica-core connect` mints one
 
 
 def test_ws_token_from_env(monkeypatch):

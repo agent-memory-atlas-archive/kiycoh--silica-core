@@ -193,7 +193,7 @@ def quarantine(path: Path) -> Path | None:
     """Rename a corrupt state file aside — never clobbered, never deleted.
 
     Derived stores rebuild from empty afterwards; authoritative stores keep
-    the bytes here for manual inspection. `silica doctor` surfaces any
+    the bytes here for manual inspection. `silica-core doctor` surfaces any
     `*.corrupt.*` file it finds. Returns the quarantine path, or None if the
     rename itself failed (callers treat that as "proceed anyway": read paths
     must not raise).

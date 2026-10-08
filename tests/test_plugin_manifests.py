@@ -21,7 +21,7 @@ def _manifest(folder: str) -> dict:
 def test_both_mcp_files_launch_a_bare_silica_mcp():
     # Two files because the dialects disagree on the wrapper key only: Claude
     # Code reads `mcpServers`, Codex reads `mcp_servers`. What they must share
-    # is the launch SHAPE — `silica mcp` over stdio with no vault pinned.
+    # is the launch SHAPE — `silica-core mcp` over stdio with no vault pinned.
     # WHICH silica each one launches diverged on purpose 2026-08-29 (see
     # test_mcp_surface.test_plugin_serves_its_own_tree_not_the_published_wheel):
     # Claude Code expands ${CLAUDE_PLUGIN_ROOT} and so can run the checkout it
@@ -31,9 +31,9 @@ def test_both_mcp_files_launch_a_bare_silica_mcp():
         assert set(doc) == {key}, name
         srv = doc[key]["silica-core"]
         args = srv["args"]
-        # ...and the same retrieval mode as every block `silica setup` writes:
+        # ...and the same retrieval mode as every block `silica-core setup` writes:
         # installing Silica through the plugin or through setup is one experience.
-        assert args[args.index("silica"):] == MCP_COMMAND[3:], name
+        assert args[args.index("silica-core"):] == MCP_COMMAND[3:], name
         assert "env" not in srv  # vault = the folder the client opened, never a pin
 
     # Codex is the install path setup_client also writes by hand, so those two
@@ -75,7 +75,7 @@ def test_the_registry_entry_is_launchable_and_owns_its_package():
     # release job holds both of these to the tag.
     assert server["version"] == pkg["version"]
 
-    # Same shape as the block `silica setup <client>` writes, executable aside.
+    # Same shape as the block `silica-core setup <client>` writes, executable aside.
     def flat(args):  # what a client spells: `--name value` for named, `value` for positional
         return [t for a in args for t in ([a["name"], a["value"]] if a["type"] == "named" else [a["value"]])]
     assert [pkg["runtimeHint"], *flat(pkg["runtimeArguments"])] == MCP_COMMAND[:3]

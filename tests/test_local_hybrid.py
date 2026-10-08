@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 Alessandro Carosia
 
-"""`silica mcp --retrieval local-hybrid`: potion in-process, the index and its
+"""`silica-core mcp --retrieval local-hybrid`: potion in-process, the index and its
 vectors built in the background at start, lexical search meanwhile."""
 import threading
 

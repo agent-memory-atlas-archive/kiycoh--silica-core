@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 Alessandro Carosia
 
-"""The two ways the plugin asks to be used: `silica setup claude`
+"""The two ways the plugin asks to be used: `silica-core setup claude`
 puts its block into CLAUDE.md once, between markers; the search description
 opens with the ask and stays under Claude Code's comfortable size."""
 from __future__ import annotations
@@ -44,3 +44,4 @@ def test_no_contract_surface_says_blocked():
     surfaces["guidance"] = GUIDANCE
     for name, text in surfaces.items():
         assert not re.search(r"\bblocked\b", text, re.I), f"{name} says 'blocked'"
+

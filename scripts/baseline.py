@@ -480,7 +480,7 @@ def main() -> int:
                     "Z (no plugin, zvec-grep MCP), F (forced), P (grep then code_pack)")
     ap.add_argument("--prepare", action="store_true", help="build both sides' indexes per task root first and record the seconds")
     ap.add_argument("--effort", default="", help="claude --effort for every run (low, medium, high, xhigh, max); empty = the client's default")
-    ap.add_argument("--guidance", default="", help="a file appended to the system prompt of arms A and S (the block silica setup claude writes)")
+    ap.add_argument("--guidance", default="", help="a file appended to the system prompt of arms A and S (the block silica-core setup claude writes)")
     ap.add_argument("--out", default="", help="results folder; default docs/baseline/<stamp>")
     ap.add_argument("--no-skills", action="store_true", help="disable every skill in both arms")
     ap.add_argument("--plugin-dir", default="", help="load the plugin from this checkout instead of the installed one")
@@ -512,7 +512,7 @@ def main() -> int:
         prep = {}
         for cwd in sorted({str(t["cwd"]) for t in wanted}):
             t0 = time.time()
-            s = subprocess.run(["uv", "run", "--project", str(REPO), "--extra", "dense", "silica", "index", "--embed"],
+            s = subprocess.run(["uv", "run", "--project", str(REPO), "--extra", "dense", "silica-core", "index", "--embed"],
                                cwd=cwd, env={**os.environ, **CODE_ENV, "SILICA_VAULT": cwd}, capture_output=True, text=True)
             t1 = time.time()
             z = subprocess.run([ZG, "index", cwd, "--embedding", "local/potion-retrieval-32m", "--mode", "direct"],

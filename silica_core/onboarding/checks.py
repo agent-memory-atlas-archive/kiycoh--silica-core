@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 Alessandro Carosia
 
-"""`silica doctor` — the state of this install and this root, as data.
+"""`silica-core doctor` — the state of this install and this root, as data.
 No model, no endpoint: the core needs neither. Each check is (name, status,
 detail, hint) with status ok | warn | fail."""
 from __future__ import annotations
@@ -33,11 +33,11 @@ def check_index(config: Any) -> CheckResult:
     try:
         st = index_state()
     except Exception as e:  # a broken index dir is a finding, not a crash
-        return CheckResult("index", "fail", f"unreadable ({e})", "run `silica index --rebuild`")
+        return CheckResult("index", "fail", f"unreadable ({e})", "run `silica-core index --rebuild`")
     if st["state"] == "cold":
-        return CheckResult("index", "warn", "never built", "run `silica index`; searches build it on first use")
+        return CheckResult("index", "warn", "never built", "run `silica-core index`; searches build it on first use")
     if st["state"] == "stale":
-        return CheckResult("index", "warn", f"{st['docs']} docs, files changed since", "the next search refreshes it; `silica index` does it now")
+        return CheckResult("index", "warn", f"{st['docs']} docs, files changed since", "the next search refreshes it; `silica-core index` does it now")
     return CheckResult("index", "ok", f"{st['docs']} docs, current")
 
 
@@ -64,7 +64,7 @@ def check_quarantine(config: Any) -> CheckResult:
     q = index_dir() / "quarantine"
     n = sum(1 for _ in q.glob("*")) if q.is_dir() else 0
     if n:
-        return CheckResult("quarantine", "warn", f"{n} unreadable index file(s) set aside", "run `silica index --rebuild`")
+        return CheckResult("quarantine", "warn", f"{n} unreadable index file(s) set aside", "run `silica-core index --rebuild`")
     return CheckResult("quarantine", "ok", "none")
 
 
@@ -78,15 +78,15 @@ def check_embeddings(config: Any) -> CheckResult:
     host = embeddings.consent_needed()
     if host:
         return CheckResult("embeddings", "warn", f"{where}, {n} section vectors; {host} is not on this machine and was never allowed",
-                           "run `silica index --embed --allow-remote` once, or point at a local endpoint")
-    return CheckResult("embeddings", "ok" if n else "warn", f"{where}, {n} section vectors", "" if n else "run `silica index --embed`")
+                           "run `silica-core index --embed --allow-remote` once, or point at a local endpoint")
+    return CheckResult("embeddings", "ok" if n else "warn", f"{where}, {n} section vectors", "" if n else "run `silica-core index --embed`")
 
 
 def check_model(config: Any) -> CheckResult:
     from silica_core.repl import endpoint
     model, base, key = endpoint()
     if not model:
-        return CheckResult("model", "ok", "none (SILICA_MODEL unset); only `silica repl` needs one")
+        return CheckResult("model", "ok", "none (SILICA_MODEL unset); only `silica-core repl` needs one")
     return CheckResult("model", "ok" if (key or "localhost" in base) else "warn", f"{model} @ {base}",
                        "" if (key or "localhost" in base) else "no API key found for this provider")
 

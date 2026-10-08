@@ -28,8 +28,8 @@ RUN pip install --no-cache-dir --find-links=/wheels "silica-core[mcp]" \
  && mkdir -p /data /vault
 # Not installed: git, ffmpeg, soffice, whisper-cli, yt-dlp, mineru. Every one is
 # reached through shutil.which and its absence disables that converter lane
-# instead of crashing — `silica doctor` reports which ones are missing. Add them
+# instead of crashing — `silica-core doctor` reports which ones are missing. Add them
 # to this image only for the lanes you actually run.
 WORKDIR /vault
-ENTRYPOINT ["silica"]
+ENTRYPOINT ["silica-core"]
 CMD ["mcp"]

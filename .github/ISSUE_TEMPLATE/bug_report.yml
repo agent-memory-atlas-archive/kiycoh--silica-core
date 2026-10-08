@@ -19,7 +19,7 @@ body:
   - type: textarea
     id: doctor
     attributes:
-      label: silica doctor
+      label: silica-core doctor
       description: Optional, and it answers most environment questions in one paste. It prints setting names, never their values.
       render: text
     validations:

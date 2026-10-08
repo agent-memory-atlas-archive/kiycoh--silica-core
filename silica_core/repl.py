@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 Alessandro Carosia
 
-"""`silica repl` — the optional reference harness: a free agent loop over the
+"""`silica-core repl` — the optional reference harness: a free agent loop over the
 same tools the MCP server serves, with an OpenAI-compatible chat model.
 
 The model, its endpoint and its key belong to this surface alone: nothing
-else in the package needs them, and `silica mcp` runs without them. No
+else in the package needs them, and `silica-core mcp` runs without them. No
 ingestion state machine, no memory lane, no capture: a turn is the model
 calling tools until it answers.
 
@@ -159,7 +159,7 @@ def _describe_call(name: str, args: dict, result: str) -> str:
 def main() -> int:
     model, base, key = endpoint()
     if not model:
-        print("silica repl needs a model: export SILICA_MODEL (e.g. openrouter/deepseek/deepseek-chat, "
+        print("silica-core repl needs a model: export SILICA_MODEL (e.g. openrouter/deepseek/deepseek-chat, "
               "lmstudio/<loaded model>, ollama/<model>) and, for a hosted provider, its key.", file=sys.stderr)
         return 1
     try:
@@ -168,7 +168,7 @@ def main() -> int:
         pass
     registry = _tools()
     messages: list[dict] = [{"role": "system", "content": SYSTEM.format(root=CONFIG.vault_path)}]
-    print(f"silica repl · {model} @ {base} · {len(registry)} tools · /help", file=sys.stderr)
+    print(f"silica-core repl · {model} @ {base} · {len(registry)} tools · /help", file=sys.stderr)
     while True:
         try:
             line = input("\n› ").strip()

@@ -10,7 +10,7 @@
         "mcp",
         "--extra",
         "dense",
-        "silica",
+        "silica-core",
         "mcp",
         "--retrieval",
         "local-hybrid"

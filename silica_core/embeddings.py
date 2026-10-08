@@ -19,7 +19,7 @@ model that wants them (nomic: `search_document: ` / `search_query: `);
 neither is added on its own.
 
 Text leaves the machine only for a non-loopback endpoint, and only after
-`silica index --embed --allow-remote` granted that host once (kept in
+`silica-core index --embed --allow-remote` granted that host once (kept in
 `~/.silica/embedding_consent.json`).
 
 ponytail: the dot products run in pure Python unless numpy is importable
@@ -62,7 +62,7 @@ def enabled() -> bool:
 
 
 # ---------------------------------------------------------------------------
-# the retrieval mode: `silica mcp --retrieval local-hybrid` is the plugin's
+# the retrieval mode: `silica-core mcp --retrieval local-hybrid` is the plugin's
 # ---------------------------------------------------------------------------
 
 POTION = "model2vec/minishlab/potion-retrieval-32M"
@@ -251,7 +251,7 @@ def load() -> tuple[dict, array] | None:
 def _current(meta: dict, rows: array) -> tuple[dict, array] | None:
     """The store, or None when it was embedded by another model or under
     another document prefix: those vectors describe other text, and serving
-    them beside this query's would rank noise (`silica index --embed` rebuilds)."""
+    them beside this query's would rank noise (`silica-core index --embed` rebuilds)."""
     if meta.get("model") != CONFIG.embedding_model or meta.get("doc_prefix", "") != CONFIG.embedding_doc_prefix:
         return None
     return meta, rows
@@ -328,7 +328,7 @@ def rank(query: str, live: dict[str, float]) -> tuple[list[tuple[str, float]], d
     meta, rows = loaded
     q = _unit(embed_texts([CONFIG.embedding_query_prefix + query])[0])
     if len(q) != meta["dim"]:
-        raise RuntimeError(f"the endpoint answered {len(q)} dimensions, the store holds {meta['dim']}: run `silica index --embed --rebuild`")
+        raise RuntimeError(f"the endpoint answered {len(q)} dimensions, the store holds {meta['dim']}: run `silica-core index --embed --rebuild`")
     scores = _scores(rows, meta["dim"], q)
     best: dict[str, float] = {}
     sections: dict[tuple[str, int], float] = {}

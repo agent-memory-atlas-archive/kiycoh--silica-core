@@ -1692,10 +1692,10 @@ def test_a_single_segment_of_real_content_stays_unflagged(tmp_vault, monkeypatch
     assert not conv.is_skippable_chunk(paths[0])
 
 
-# --- the conversion's own identity, and the sidecar `silica import` leaves ----
+# --- the conversion's own identity, and the sidecar `silica-core import` leaves ----
 
 def test_beside_writes_one_sidecar_that_records_the_originals_hash(tmp_vault, monkeypatch):
-    """`silica import` leaves the `.md` next to the source: that is the file
+    """`silica-core import` leaves the `.md` next to the source: that is the file
     `silica_read` and the index serve in place of the text layer, looked up
     as `with_suffix('.md')`, so it is one file even for a book, and it says
     which bytes it came from — the text's version cannot."""

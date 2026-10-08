@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 Alessandro Carosia
 
-"""The block `silica setup claude` writes into Claude Code's user-level
+"""The block `silica-core setup claude` writes into Claude Code's user-level
 CLAUDE.md, between markers so a second run replaces it and nothing else
 on the page is touched: when to search before grep, what to do with a
 hit. The same text the harness appends to the system prompt when it

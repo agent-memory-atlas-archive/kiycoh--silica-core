@@ -59,7 +59,7 @@ def test_plugin_manifest_launches_silica_mcp():
     plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
     servers = json.loads((ROOT / plugin["mcpServers"]).read_text(encoding="utf-8"))["mcpServers"]
     args = servers["silica-core"]["args"]
-    assert args[args.index("silica"):args.index("silica") + 2] == ["silica", "mcp"]
+    assert args[args.index("silica-core"):args.index("silica-core") + 2] == ["silica-core", "mcp"]
     # the official plugin is local-hybrid: the [dense] extra installed, potion
     # in-process, index and vectors warmed up at start; the package stays lexical
     assert "dense" in args[args.index("--extra"):] and args[-2:] == ["--retrieval", "local-hybrid"]
@@ -78,7 +78,9 @@ def test_plugin_serves_its_own_tree_not_the_published_wheel():
     # --project selects the environment and leaves the working directory alone;
     # --directory would serve the silica checkout as every project's vault.
     assert "--project" in args and "--directory" not in args
-    assert not any("silica-core" in a for a in args), "back on the PyPI wheel"
+    # the bare word is the script (ADR-0067); any other spelling of the
+    # distribution is a requirement, and a requirement resolves the wheel
+    assert not any("silica-core" in a for a in args if a != "silica-core"), "back on the PyPI wheel"
 
     # Codex is not a plugin host: it has no ${CLAUDE_PLUGIN_ROOT} to expand, so
     # its manifest deliberately keeps the published wheel.

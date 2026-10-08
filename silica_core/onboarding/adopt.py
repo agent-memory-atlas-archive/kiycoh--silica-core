@@ -113,7 +113,7 @@ def mark_root(vault: str | Path) -> Path | None:
     if manifest.exists():
         return None
     try:
-        manifest.write_text("# silica init: this folder is a root. `write_dir:` and `sources:` may go here.\n",
+        manifest.write_text("# silica-core init: this folder is a root. `write_dir:` and `sources:` may go here.\n",
                             encoding="utf-8")
     except OSError as exc:
         logger.warning("could not write %s (%s) — the MCP server will not serve this folder", manifest, exc)

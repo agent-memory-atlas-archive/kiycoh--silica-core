@@ -7,7 +7,7 @@ From SILICA.md §3 L0:
   Adapter typed by DOMAIN, not by transport. Everything else talks to the
   Driver, never to disk directly. Two interchangeable backends:
   - fs: direct filesystem + index (derived from Hermes scripts)
-  - ws: the Obsidian bridge plugin, installed live by `silica connect`
+  - ws: the Obsidian bridge plugin, installed live by `silica-core connect`
 
 This module defines the Protocol (interface), domain types, and the
 global DRIVER instance selected at runtime.

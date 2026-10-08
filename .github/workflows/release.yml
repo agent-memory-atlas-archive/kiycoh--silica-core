@@ -99,7 +99,7 @@ jobs:
         run: ls -1 dist/ && uv run python -c "import pathlib,sys; t='${{ github.ref_name }}'.lstrip('v'); files=[p.name for p in pathlib.Path('dist').glob('*.whl')]; sys.exit(0 if any(t.replace('-','_') in f for f in files) else f'tag {t} not in {files}')"
 
       - name: Verify the wheel ships the skill
-        # Guards the package-data config: `silica setup` copies SKILL.md out of
+        # Guards the package-data config: `silica-core setup` copies SKILL.md out of
         # the installed package, and a wheel that drops it fails at runtime.
         run: |
           unzip -l dist/*.whl | grep -q "silica_core/skills/silica/SKILL.md" || { echo "MISSING from wheel: SKILL.md"; exit 1; }

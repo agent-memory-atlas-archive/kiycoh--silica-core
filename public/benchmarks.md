@@ -185,7 +185,7 @@ ask: `silica_search`'s description opens with it and names what not to do
 Glob; do not grep for the words of a question"); a `UserPromptSubmit` hook
 in the plugin adds one line before a question that names no identifier,
 asking the model to say whether the search applies and blocking nothing
-(16 of the 20 questions qualify); and the block `silica setup claude` writes
+(16 of the 20 questions qualify); and the block `silica-core setup claude` writes
 between markers into `~/.claude/CLAUDE.md`. With the ask the search ran in
 17 of 20 runs (27 calls, 6 reads) at 4.7 turns and 24 s a question, judge
 59.7; the same plugin without it searched in none, at 6.5 turns and 28 s,
@@ -221,7 +221,7 @@ quarter fewer calls. The code questions in that set all named identifiers,
 where the descriptions say grep wins and the model greps; what a question
 that names none does with a code index on is the section above.
 
-Put the pair in front of the model instead: `silica mcp` marks
+Put the pair in front of the model instead: `silica-core mcp` marks
 `silica_search` and `silica_read` `anthropic/alwaysLoad`, so a client that
 defers MCP tools behind its own tool search keeps those two in the list and
 the other three ride behind them. On the same twelve document tasks the model

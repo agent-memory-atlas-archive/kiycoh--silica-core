@@ -26,7 +26,7 @@ JSON. A hit is a path, a section, a line, a window of text and the numbers
 to judge it by. The harness owns the loop.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kiycoh/silica-core/main/assets/quickstart.gif" alt="the quickstart recorded end to end: uv tool install, silica init reporting nine indexed documents, silica setup claude registering the MCP server, then Claude Code answering a question about the LSM compaction design space by calling silica-core and citing the PDF with its page and its line" width="900" />
+  <img src="https://raw.githubusercontent.com/kiycoh/silica-core/main/assets/quickstart.gif" alt="the quickstart recorded end to end: uv tool install, silica-core init reporting nine indexed documents, silica-core setup claude registering the MCP server, then Claude Code answering a question about the LSM compaction design space by calling silica-core and citing the PDF with its page and its line" width="900" />
 </p>
 
 Three commands, then a question asked the way you would ask any other. The
@@ -55,17 +55,17 @@ reports `terms_absent`.
 In any folder of markdown, code, PDFs or office files:
 
 ```bash
-silica init                               # adopt the folder: ignore file, vault.yaml, first index; the MCP server serves adopted folders only
-silica search "leveled compaction" -k 5  # the best located passages
-silica setup claude                      # register the MCP server, write the guidance block into ~/.claude/CLAUDE.md
+silica-core init                              # adopt the folder: ignore file, vault.yaml, first index; the MCP server serves adopted folders only
+silica-core search "leveled compaction" -k 5  # the best located passages
+silica-core setup claude                      # register the MCP server, write the guidance block into ~/.claude/CLAUDE.md
 
 # optional, with the [dense] extra: the dense leg, a static model, nothing leaves the machine
 export SILICA_EMBEDDING_MODEL=model2vec/minishlab/potion-retrieval-32M
-silica index --embed
+silica-core index --embed
 ```
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kiycoh/silica-core/main/assets/search-hit.png" alt="silica search &quot;leveled compaction&quot; over nine LSM papers: the hit carries the file, p. 5 and the passage; beside it the PDF is open on that page with the same passage highlighted" width="900" />
+  <img src="https://raw.githubusercontent.com/kiycoh/silica-core/main/assets/search-hit.png" alt="silica-core search &quot;leveled compaction&quot; over nine LSM papers: the hit carries the file, p. 5 and the passage; beside it the PDF is open on that page with the same passage highlighted" width="900" />
 </p>
 
 Nine arXiv papers, indexed in 2.1 s. The hit names the file, the page and
@@ -75,17 +75,17 @@ the passage; the page beside it is the check.
 
 | Tool | Shell | Returns |
 |---|---|---|
-| `silica_files` | `silica files` | the inventory and what the index did with each file: `indexed`, `changed`, `excluded`, `failed`, `unconverted` |
-| `silica_search` | `silica search` | ranked passages: path, section, line, BM25, matched terms, `coverage`, and the query terms absent from the corpus |
-| `silica_read` | `silica read` | a slice by lines or by heading (a page, in a PDF), the outline, and a `version` to carry forward |
-| `silica_code_pack` | `silica code-pack` | an AST context pack for one source file inside a character budget |
-| `silica_write_note` | `silica write-note` | one atomic write, linted for structure and unresolved wikilinks |
+| `silica_files` | `silica-core files` | the inventory and what the index did with each file: `indexed`, `changed`, `excluded`, `failed`, `unconverted` |
+| `silica_search` | `silica-core search` | ranked passages: path, section, line, BM25, matched terms, `coverage`, and the query terms absent from the corpus |
+| `silica_read` | `silica-core read` | a slice by lines or by heading (a page, in a PDF), the outline, and a `version` to carry forward |
+| `silica_code_pack` | `silica-core code-pack` | an AST context pack for one source file inside a character budget |
+| `silica_write_note` | `silica-core write-note` | one atomic write, linted for structure and unresolved wikilinks |
 
 In a source tree every function, method, class and constant is its own unit:
 a hit's `section` is the symbol, `span` its lines, and
 `silica_read(path, section=…)` serves the body. For a symbol whose name is
 known, grep wins; for a question that names none, the search comes first:
-the tool description and the block `silica setup claude` writes say so. The
+the tool description and the block `silica-core setup claude` writes say so. The
 contract, the reply shapes and the acceptance checks are in
 [TOOLS.md](TOOLS.md). Nothing needs an API key or a network.
 
@@ -99,7 +99,7 @@ fields say how much the result is worth:
 - `matched_terms`: the words this hit actually contains.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kiycoh/silica-core/main/assets/search-says-no.png" alt="silica search &quot;raft consensus log replication&quot; over the same nine papers: terms_absent lists raft and consensus, coverage falls to 0.19, and the top hit is a passage about data replication rather than Raft" width="900" />
+  <img src="https://raw.githubusercontent.com/kiycoh/silica-core/main/assets/search-says-no.png" alt="silica-core search &quot;raft consensus log replication&quot; over the same nine papers: terms_absent lists raft and consensus, coverage falls to 0.19, and the top hit is a passage about data replication rather than Raft" width="900" />
 </p>
 
 `raft consensus log replication` over the same nine papers: `raft` and
@@ -163,17 +163,17 @@ Corpora, intervals, per-task exceptions and reproduction commands are in
 
 ## Harnesses
 
-`silica setup <client>` writes the registration into the client's own config
+`silica-core setup <client>` writes the registration into the client's own config
 and backs up what was there; for `claude` it also puts a guidance block, when
-to search before grep, into `~/.claude/CLAUDE.md`. `silica setup --list`
+to search before grep, into `~/.claude/CLAUDE.md`. `silica-core setup --list`
 names the clients: `claude`, `codex`, `cursor`, `windsurf`, `zed`, `cline`,
-`roo`, `continue`, `goose`, `opencode`, `openhands`, `gemini`, `dsh`,
+`roo`, `continue`, `goose`, `opencode`, `openhands`, `gemini`, `antigravity`, `dsh`,
 `hermes`, `openclaw`, `agent-zero`, `claude-desktop`, `lmstudio`,
 `anythingllm` and `librechat`; `shell`, `python` and `generic` print recipes
 for anything else. The server serves the folder the client opens in;
 `--vault DIR` or `SILICA_VAULT` fixes the root.
 
-Every written block, and the Claude Code plugin, run `silica mcp --retrieval
+Every written block, and the Claude Code plugin, run `silica-core mcp --retrieval
 local-hybrid`: `potion-retrieval-32M` in the server process, index and
 vectors built in the background at start, the search lexical and `dense:
 warming` until they land. Nothing leaves the machine; the one download is
@@ -183,9 +183,9 @@ Docker and the REPL are in [public/harnesses.md](public/harnesses.md).
 
 ## Notes
 
-- **What it reads:** markdown, `.txt`, `.rst` and PDFs with a text layer directly, one PDF page per section; DOCX, EPUB, FB2, RTF, XLS and ODF converted with no extra; scanned PDFs, images, PPTX and XLSX through `silica import` with [MinerU](https://github.com/opendatalab/MinerU); audio and video with `ffmpeg` plus `SILICA_STT_BASE_URL`; CSV readable by line, excluded from search. In a source tree the code lane adds source files and their `json`, `yaml`, `toml`, `cfg` and `ini`. `silica doctor` says which lanes this machine has.
-- **The dense leg:** section embeddings that catch a paraphrase sharing no rare word with the answer. `uv tool install` stays lexical until `silica index --embed`, with the `[dense]` extra's local model or any OpenAI-compatible `/v1/embeddings` endpoint. Text leaves the machine only for a remote endpoint, and only after `silica index --embed --allow-remote` grants that host once. Variables and reply states in [TOOLS.md](TOOLS.md), the ollama recipe in [public/harnesses.md](public/harnesses.md).
-- **More surfaces:** `silica mcp --extended` adds the wikilink tools; `silica connect` (extra `[connect]`) hosts the bridge the Obsidian plugin dials into, so writes land through the vault API while the app is open; `silica repl` runs a small reference agent over the same tools, the one surface that needs a model (`SILICA_MODEL`).
+- **What it reads:** markdown, `.txt`, `.rst` and PDFs with a text layer directly, one PDF page per section; DOCX, EPUB, FB2, RTF, XLS and ODF converted with no extra; scanned PDFs, images, PPTX and XLSX through `silica-core import` with [MinerU](https://github.com/opendatalab/MinerU); audio and video with `ffmpeg` plus `SILICA_STT_BASE_URL`; CSV readable by line, excluded from search. In a source tree the code lane adds source files and their `json`, `yaml`, `toml`, `cfg` and `ini`. `silica-core doctor` says which lanes this machine has.
+- **The dense leg:** section embeddings that catch a paraphrase sharing no rare word with the answer. `uv tool install` stays lexical until `silica-core index --embed`, with the `[dense]` extra's local model or any OpenAI-compatible `/v1/embeddings` endpoint. Text leaves the machine only for a remote endpoint, and only after `silica-core index --embed --allow-remote` grants that host once. Variables and reply states in [TOOLS.md](TOOLS.md), the ollama recipe in [public/harnesses.md](public/harnesses.md).
+- **More surfaces:** `silica-core mcp --extended` adds the wikilink tools; `silica-core connect` (extra `[connect]`) hosts the bridge the Obsidian plugin dials into, so writes land through the vault API while the app is open; `silica-core repl` runs a small reference agent over the same tools, the one surface that needs a model (`SILICA_MODEL`).
 - **Not in the core:** no memory lane, prompt injection, summaries or undo journal. Undo is git.
 
 ## License

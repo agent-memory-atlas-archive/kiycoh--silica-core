@@ -36,7 +36,7 @@ K1, B = 1.5, 0.75
 POOL_FACTOR = 3
 # Documents a search refreshes inline before answering. Past it the index is
 # served as it is and `index.pending` says how far behind, so a bulk drop of
-# files never turns one search into a rebuild: `silica index` catches up.
+# files never turns one search into a rebuild: `silica-core index` catches up.
 # ~13 ms a document on the 254-paper corpus (2026-09-08), so 50 stays under
 # a second. ponytail: a count, not bytes; one 40 MB PDF still blocks.
 STALE_BUDGET = 50
@@ -216,7 +216,7 @@ def _pdf_text(rel: str, full: Path) -> tuple[str, list[dict], str]:
 
     ponytail: the text layer as PDFium hands it over — no OCR, no column
     reordering, no table reconstruction. A scan carries no text layer, stays
-    `unconverted`, and `silica import` (mineru, docling) is the upgrade path.
+    `unconverted`, and `silica-core import` (mineru, docling) is the upgrade path.
     """
     cache = _extract_cache(rel)
     pages_file = cache.with_suffix(".json")
@@ -502,7 +502,7 @@ def _build_index(rebuild: bool = False, embed: bool = False, live: dict[str, flo
             embeddings.grant(host)
         elif host:
             return _error("consent_required", f"the sections would leave this machine for {host}: "
-                          "run `silica index --embed --allow-remote` once to allow it", **out)
+                          "run `silica-core index --embed --allow-remote` once to allow it", **out)
         to_embed = []
         for rel in live:
             if rel not in stamps:
@@ -725,10 +725,10 @@ def _search(query: str, folder: str, k: int, per_doc: int, width: int, queries: 
     elif not embeddings.enabled():
         leg = {"state": "off"}
     elif embeddings.load() is None:
-        leg = {"state": "no_vectors", "hint": "run `silica index --embed`"}
+        leg = {"state": "no_vectors", "hint": "run `silica-core index --embed`"}
     elif host := embeddings.consent_needed():
         leg = {"state": "consent_required", "hint": f"the query would leave this machine for {host}: "
-               "run `silica index --embed --allow-remote` once to allow it"}
+               "run `silica-core index --embed --allow-remote` once to allow it"}
     else:
         leg = {"state": "ready"}
     hybrid = leg["state"] == "ready"
@@ -943,10 +943,10 @@ def silica_read(
         elif full.suffix.lower() == ".pdf":
             text, pages, reason = _pdf_text(rel, full)
             if not text:
-                return _error("unconverted", f"{reason} in {rel}; run `silica import {rel}`")
+                return _error("unconverted", f"{reason} in {rel}; run `silica-core import {rel}`")
             source, paged = rel, True
         else:
-            return _error("unconverted", f"no extracted text beside {rel}; run `silica import {rel}`")
+            return _error("unconverted", f"no extracted text beside {rel}; run `silica-core import {rel}`")
     version = _version(text)
     if expect_version and expect_version != version:
         return _error("changed", f"{rel} is now version {version}", version=version)
@@ -1064,7 +1064,7 @@ def _lint(rel: str, content: str) -> list[dict]:
 
 def _unescape(body: str) -> str:
     r"""Decode a body the model escaped twice: no real newline anywhere and a
-    literal \n where each one belonged. Measured through `silica repl` on a
+    literal \n where each one belonged. Measured through `silica-core repl` on a
     local gemma4:e4b, which escapes its tool arguments twice, so json.loads
     hands over backslash-n and the note lands as a single line. A single real
     newline means the model got it right and the body is left alone, which is

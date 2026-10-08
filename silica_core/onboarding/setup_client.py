@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 Alessandro Carosia
 
-"""`silica setup <client>` — wire the MCP server into a coding agent's config.
+"""`silica-core setup <client>` — wire the MCP server into a coding agent's config.
 
 The read side of the vault needs no model and no key, so serving it over MCP is
 the shortest path from install to something useful. What stood between the two
@@ -48,9 +48,9 @@ import yaml
 # `--retrieval local-hybrid` is what the Claude Code plugin runs (mcp.json), so
 # one install is one experience whichever door it came through: a fresh setup
 # searches hybrid, lexically while the model downloads, lexically with `dense:
-# failed` if the model never arrives. `silica mcp` by hand is still lexical.
-MCP_COMMAND = ["uvx", "--from", "silica-core[mcp,dense]", "silica", "mcp", "--retrieval", "local-hybrid"]
-FROM_SPEC = MCP_COMMAND[2]  # `silica setup <client> --from SPEC` swaps the release for a checkout or a pin
+# failed` if the model never arrives. `silica-core mcp` by hand is still lexical.
+MCP_COMMAND = ["uvx", "--from", "silica-core[mcp,dense]", "silica-core", "mcp", "--retrieval", "local-hybrid"]
+FROM_SPEC = MCP_COMMAND[2]  # `silica-core setup <client> --from SPEC` swaps the release for a checkout or a pin
 
 NAME = "silica-core"
 
@@ -67,7 +67,7 @@ def mcp_command() -> list[str]:
 # opencode are CLIs launched from a project and spawn the stdio server with
 # that working directory, which is already the answer (`cli.resolve_cwd_vault`),
 # so the server serves the project you opened — the Claude Code model, one
-# vault per place. Writing the vault that happened to be active at `silica
+# vault per place. Writing the vault that happened to be active at `silica-core
 # setup` time would pin it into every project afterwards, which is what
 # `_activate_repo_mode` warns against. A fixed vault is still expressible:
 # export SILICA_VAULT, or add the env block by hand to the file this wrote.
@@ -225,6 +225,11 @@ CLIENTS: dict[str, Spec] = {
                       note="config.toml is read from the folder OpenHands runs in — "
                            "pass --config for another one"),
     "gemini": Spec("Gemini CLI", "json", _home(".gemini", "settings.json"), ("mcpServers",), entry=_stdio),
+    # agy 1.2.17: the file `agy mcp add` writes and the skill root its bundled
+    # docs name. It also scans ~/.gemini/antigravity-cli/skills; one root is enough.
+    "antigravity": Spec("Antigravity CLI", "json", _home(".gemini", "config", "mcp_config.json"),
+                        ("mcpServers",), entry=_stdio, skills=_home(".gemini", "config", "skills"),
+                        note="`agy mcp list` shows it; `/skills reload` in a running session picks up the skill"),
     "hermes": Spec("Hermes Agent", "yaml", lambda: _hermes_home() / "config.yaml", ("mcp_servers",),
                    entry=_stdio, skills=lambda: _hermes_home() / "skills",
                    note="Hermes watches config.yaml and reconnects MCP on change — no restart"),
@@ -265,14 +270,14 @@ CLIENTS: dict[str, Spec] = {
 
 # Harnesses with no config file to write: they either run shell commands, import
 # Python, or take the block through a settings UI. The install is a recipe, so
-# `silica setup <name>` prints it instead of failing.
+# `silica-core setup <name>` prints it instead of failing.
 RECIPES = {
     "shell": (
         "Aider, SWE-agent, Plandex, Devin, SWE-bench, and any harness with a bash tool:",
         "  pip install 'silica-core[mcp]'   # or add it to the image / setup playbook",
-        "  silica search 'query' -k 5",
-        "  silica read path/file.md --section 'Section'",
-        "  silica code-pack src/module.py --budget 10000",
+        "  silica-core search 'query' -k 5",
+        "  silica-core read path/file.md --section 'Section'",
+        "  silica-core code-pack src/module.py --budget 10000",
         "Every command answers with the same JSON the MCP tools return, on stdout.",
         "Tell the agent to run those before opening files (SKILL.md is the wording).",
     ),
@@ -280,17 +285,16 @@ RECIPES = {
         "LangGraph, smolagents, CrewAI, AutoGen, Inspect, METR — spawn the server:",
         "  from langchain_mcp_adapters.client import MultiServerMCPClient",
         "  client = MultiServerMCPClient({'silica': {",
-        "      'command': 'uvx', 'args': ['--from', 'silica-core[mcp,dense]', 'silica', 'mcp', '--retrieval', 'local-hybrid']}})",
+        "      'command': 'uvx', 'args': ['--from', 'silica-core[mcp,dense]', 'silica-core', 'mcp', '--retrieval', 'local-hybrid']}})",
         "or skip MCP and call the library directly:",
         "  from silica_core.core import search, read   # same payloads, no subprocess",
     ),
     "generic": (
-        "Any other MCP client (Void, Jan, Factory Droid, Antigravity) —",
+        "Any other MCP client (Void, Jan, Factory Droid) —",
         "paste this into its server registry:",
-        '  {"command": "uvx", "args": ["--from", "silica-core[mcp,dense]", "silica", "mcp", "--retrieval", "local-hybrid"]}',
+        '  {"command": "uvx", "args": ["--from", "silica-core[mcp,dense]", "silica-core", "mcp", "--retrieval", "local-hybrid"]}',
         "Harnesses that also read skills: copy silica_core/skills/silica/SKILL.md into their",
-        "skill root (~/.agents/skills/silica/SKILL.md serves Codex and DSH; Antigravity",
-        "uses ~/.gemini/antigravity-cli/skills/).",
+        "skill root as silica/SKILL.md.",
     ),
 }
 
@@ -381,11 +385,29 @@ def _container(data: dict, key: tuple[str, ...], kind: str):
     return node[key[-1]]
 
 
-def _present(container, kind: str) -> bool:
+def _present(container, kind: str):
+    """The existing silica-core entry, or None."""
     if kind == "list":
-        return any(isinstance(e, dict) and NAME in (e.get("name"), e.get("id"), e.get("serverName"))
-                   for e in container)
-    return NAME in container
+        return next((e for e in container if isinstance(e, dict)
+                     and NAME in (e.get("name"), e.get("id"), e.get("serverName"))), None)
+    return container.get(NAME)
+
+
+def _already(where: str, entry) -> int:
+    """Report an existing entry, which is never rewritten (module docstring).
+
+    Blocks written before 2026-10-06 launch `silica mcp`, and silica-core no
+    longer installs a `silica` script (ADR-0067). uvx keeps running the cached
+    wheel that still has it until the cache turns over, then the server dies at
+    "executable not found" while this said "nothing to do". Spotted by the argv
+    pair rather than a version, because the entry records none.
+    """
+    if '"silica", "mcp"' in json.dumps(entry, default=str):
+        _say(f"  ⚠ {NAME} in {where} still launches `silica mcp`, a script silica-core no longer "
+             "installs: change that `silica` to `silica-core`, or delete the entry and run this again")
+    else:
+        _say(f"  {NAME} is already configured in {where} — nothing to do")
+    return 0
 
 
 def _setup_config(spec: Spec, path: Path, dry_run: bool) -> int:
@@ -412,9 +434,8 @@ def _setup_config(spec: Spec, path: Path, dry_run: bool) -> int:
     if not isinstance(container, wanted):
         _say(f"  ✗ {where}: {'.'.join(spec.key)} is not a {spec.kind} — not touching it")
         return 1
-    if _present(container, spec.kind):
-        _say(f"  {NAME} is already configured in {where} — nothing to do")
-        return 0
+    if (entry := _present(container, spec.kind)) is not None:
+        return _already(where, entry)
 
     if spec.block:
         block = spec.block()
@@ -478,9 +499,8 @@ def _setup_dsh(path: Path, dry_run: bool) -> int:
             _say(f"  ✗ {escape(str(path))} is not a list of patches — not touching it")
             return 1
         rows = [r for p in patches if isinstance(p, dict) for r in p.get("insert") or [] if isinstance(r, dict)]
-        if any(r.get("id") == "mcp-silica-core" for r in rows):
-            _say(f"  {NAME} is already configured in {escape(str(path))} — nothing to do")
-            return 0
+        if (row := next((r for r in rows if r.get("id") == "mcp-silica-core"), None)) is not None:
+            return _already(escape(str(path)), row)
     patches.append({"insert": [_dsh_row()]})
     block = yaml.safe_dump(patches, sort_keys=False, allow_unicode=True)
     if dry_run:
@@ -535,8 +555,7 @@ def _setup_agent_zero(path: Path, dry_run: bool) -> int:
         _say(f'  ✗ {where}: mcp_servers is not a {{"mcpServers": …}} object — not touching it')
         return 1
     if NAME in servers:
-        _say(f"  {NAME} is already configured in {where} — nothing to do")
-        return 0
+        return _already(where, servers[NAME])
 
     servers[NAME] = _stdio()
     settings["mcp_servers"] = json.dumps(config, indent=4)
@@ -581,7 +600,7 @@ def _setup_claude(dry_run: bool) -> int:
     if result.returncode != 0:
         _say(f"  ✗ `{escape(printable)}` failed")
         return result.returncode
-    _say("  ✓ registered with Claude Code (user scope: every project; a folder is served once `silica init` adopted it)")
+    _say("  ✓ registered with Claude Code (user scope: every project; a folder is served once `silica-core init` adopted it)")
     _say(
         "  for the skill too: "
         "claude plugin marketplace add kiycoh/silica-core && "
@@ -611,7 +630,7 @@ def _write_claude_guidance(dry_run: bool) -> None:
 # ---------------------------------------------------------------- entry point
 
 def _list_clients() -> int:
-    _say("  writes the config for you — silica setup <client>:", markup=False)
+    _say("  writes the config for you — silica-core setup <client>:", markup=False)
     _say("    claude            Claude Code (delegates to `claude mcp add`)", markup=False)
     _say("    dsh               DeepSeek Harness (Cordis patch)", markup=False)
     _say(f"    {'agent-zero':<17} Agent Zero — {escape(str(_agent_zero_path()))} under its install root",
@@ -620,22 +639,22 @@ def _list_clients() -> int:
         spec = CLIENTS[name]
         _say(f"    {name:<17} {spec.label} — {escape(str(spec.path()))}", markup=False)
     _say("", markup=False)
-    _say("  prints the recipe — silica setup <topic>:", markup=False)
+    _say("  prints the recipe — silica-core setup <topic>:", markup=False)
     for name, lines in RECIPES.items():
         _say(f"    {name:<17} {lines[0]}", markup=False)
     return 0
 
 
 def run_setup(args: list[str]) -> int:
-    """`silica setup <client> [--dry-run] [--config PATH] [--from SPEC]`."""
+    """`silica-core setup <client> [--dry-run] [--config PATH] [--from SPEC]`."""
     if "--list" in args:
         return _list_clients()
     positional = [a for a in args if not a.startswith("-")]
     client = positional[0] if positional else ""
     known = client in ("claude", "dsh", "agent-zero") or client in CLIENTS or client in RECIPES
     if not known:
-        _say("  Usage: silica setup <client> [--dry-run] [--config PATH] [--from SPEC]", markup=False)
-        _say("         silica setup --list   every harness this knows how to wire up", markup=False)
+        _say("  Usage: silica-core setup <client> [--dry-run] [--config PATH] [--from SPEC]", markup=False)
+        _say("         silica-core setup --list   every harness this knows how to wire up", markup=False)
         return 1
     dry_run = "--dry-run" in args
     global FROM_SPEC

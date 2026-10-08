@@ -79,7 +79,7 @@ class ObsidianWSBackend(GraphIndexMixin):
 
     @classmethod
     def attached(cls, ws: Any, loop: asyncio.AbstractEventLoop) -> ObsidianWSBackend:
-        """Wrap an already-accepted connection (production: `silica connect`
+        """Wrap an already-accepted connection (production: `silica-core connect`
         hosts the server, the plugin dialed in). The caller owns socket and
         loop — it routes rpc_result/rpc_error frames to `_on_frame` and must
         use `detach()` (never `close()`, which would stop the shared loop)."""

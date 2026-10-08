@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 Alessandro Carosia
 
-"""`silica connect` — host the WS bridge server the Obsidian plugin dials into.
+"""`silica-core connect` — host the WS bridge server the Obsidian plugin dials into.
 
 Also the auto-host used by the TUI (start_bridge_thread, rpc-only) and the GUI
 lifespan (maybe_start_bridge, full chat) so a running Obsidian upgrades the
-driver without a separate `silica connect` session.
+driver without a separate `silica-core connect` session.
 
 PROTOCOL.md's server half. One loopback socket carries both channels: the
 plugin's chat turns stream through the transport-neutral `run_turn` (framed as
@@ -246,21 +246,21 @@ def _stop_bridge_thread(server: BridgeServer) -> None:
 
 
 def run_connect() -> int:
-    """`silica connect` entry: host the bridge until Ctrl-C. Returns exit code."""
+    """`silica-core connect` entry: host the bridge until Ctrl-C. Returns exit code."""
     try:
         import websockets  # noqa: F401
     except ImportError:
-        print("silica connect requires the [connect] extra: pip install 'silica-core[connect]'")
+        print("silica-core connect requires the [connect] extra: pip install 'silica-core[connect]'")
         return 1
     if not CONFIG.vault_path:
-        print("silica connect needs a vault: set SILICA_VAULT or run inside a repo with .silica/")
+        print("silica-core connect needs a vault: set SILICA_VAULT or run inside a repo with .silica/")
         return 1
     logger.info("bridge: serving from the fs backend until a plugin attaches")
 
     async def _main() -> None:
         server = BridgeServer()
         await server.start()
-        print(f"silica connect — ws://127.0.0.1:{server.port} (Ctrl-C to stop)")
+        print(f"silica-core connect — ws://127.0.0.1:{server.port} (Ctrl-C to stop)")
         try:
             await asyncio.get_running_loop().create_future()  # serve until interrupted
         finally:

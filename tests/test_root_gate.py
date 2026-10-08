@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 Alessandro Carosia
 
-"""A folder is a root only once `silica init` adopted it, and the MCP server
+"""A folder is a root only once `silica-core init` adopted it, and the MCP server
 serves no other. Opened in a home folder on 2026-09-18, a session indexed
 it whole: 65,530 documents, 389,529 vectors, 6.8 GB of RAM per server,
 two servers per session, for as long as the session lived."""
@@ -19,9 +19,9 @@ def test_the_gate_refuses_until_vault_yaml_appears_then_warms_up_once(tmp_path, 
     monkeypatch.setattr(mcp, "configure_retrieval", started.append)  # the real one loads a model
     check = mcp.root_gate("local-hybrid")
     refused = json.loads(check())
-    assert refused["error"]["code"] == "not_initialised" and "silica init" in refused["error"]["hint"]
+    assert refused["error"]["code"] == "not_initialised" and "silica-core init" in refused["error"]["hint"]
     assert refused["root"] == str(tmp_path.resolve()) and started == []
-    (tmp_path / "vault.yaml").write_text("# silica init\n", encoding="utf-8")
+    (tmp_path / "vault.yaml").write_text("# silica-core init\n", encoding="utf-8")
     assert check() is None and check() is None and started == ["local-hybrid"]
 
 
@@ -62,7 +62,7 @@ def test_init_marks_a_prose_folder_as_a_root(tmp_path):
 
 def test_a_comment_only_vault_yaml_is_an_empty_manifest(tmp_path, caplog):
     from silica_core.kernel.vault_manifest import load_manifest
-    (tmp_path / "vault.yaml").write_text("# silica init\n", encoding="utf-8")
+    (tmp_path / "vault.yaml").write_text("# silica-core init\n", encoding="utf-8")
     with caplog.at_level("WARNING", logger="silica_core.kernel.vault_manifest"):
         m = load_manifest(tmp_path)
     assert m.sources == ("prose",) and m.write_dir == "" and not caplog.records

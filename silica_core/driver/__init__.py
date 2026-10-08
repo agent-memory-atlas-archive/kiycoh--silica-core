@@ -6,7 +6,7 @@
 Two backends, one of which is never built from config:
   - ObsidianFSBackend — direct filesystem access, headless, no Obsidian
     required. Built here, always.
-  - ObsidianWSBackend — installed live by `silica connect` via set_driver()
+  - ObsidianWSBackend — installed live by `silica-core connect` via set_driver()
     when the Obsidian plugin dials in.
 
 Usage:
@@ -57,7 +57,7 @@ def get_driver() -> ObsidianDriver:
 
 
 def driver_kind() -> str:
-    """"ws" while `silica connect` has a plugin attached, else "fs".
+    """"ws" while `silica-core connect` has a plugin attached, else "fs".
 
     Reads the cached instance rather than CONFIG so it reports what is actually
     serving reads, and never forces driver construction just to answer.
@@ -108,7 +108,7 @@ def reader_for(vault: str) -> ObsidianDriver:
 
 
 def set_driver(driver: ObsidianDriver | None) -> None:
-    """Install a live driver instance — `silica connect`'s attached ws backend.
+    """Install a live driver instance — `silica-core connect`'s attached ws backend.
     None falls back to building the fs backend on next access."""
     global _driver
     with _driver_lock:

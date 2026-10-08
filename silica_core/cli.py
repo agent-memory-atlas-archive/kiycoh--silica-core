@@ -37,7 +37,7 @@ def _emit(result: dict) -> int:
 def _parser() -> argparse.ArgumentParser:
     from silica_core._version import __version__
 
-    p = argparse.ArgumentParser(prog="silica", description="Non-LLM retrieval tools for agent harnesses (see TOOLS.md).")
+    p = argparse.ArgumentParser(prog="silica-core", description="Non-LLM retrieval tools for agent harnesses (see TOOLS.md).")
     p.add_argument("--vault", default="", metavar="DIR", help="root folder (default: the folder you run in)")
     p.add_argument("--version", action="version", version=f"silica {__version__}")
     sub = p.add_subparsers(dest="cmd")
@@ -100,7 +100,7 @@ def _parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("setup", help="register the MCP server in a client")
     s.add_argument("client", nargs="?", default="", metavar="CLIENT",
-                   help="claude, codex, cursor, zed, goose, … — `silica setup --list` names them all")
+                   help="claude, codex, cursor, zed, goose, … — `silica-core setup --list` names them all")
     s.add_argument("--list", dest="list_clients", action="store_true", help="every harness this knows how to wire up")
     s.add_argument("--dry-run", action="store_true")
     s.add_argument("--from", dest="from_spec", default="", metavar="SPEC", help="what uvx installs instead of the release, e.g. '/path/to/checkout[mcp,dense]'")
@@ -180,7 +180,7 @@ def main(argv: list[str] | None = None) -> int:
         built = core.build_index(rebuild=True)
         return _emit({"root": str(root), "silicaignore": str(ignore) if ignore else None,
                       "write_dir": declared, "index": built["index"], "docs": built["docs"],
-                      "next": "silica setup <client> registers the MCP server; silica setup --list names every harness"})
+                      "next": "silica-core setup <client> registers the MCP server; silica-core setup --list names every harness"})
     if a.cmd == "setup":
         from silica_core.onboarding.setup_client import run_setup
         return run_setup(([a.client] if a.client else []) + (["--list"] if a.list_clients else []) + (["--dry-run"] if a.dry_run else []) + (["--from", a.from_spec] if a.from_spec else []) + (["--config", a.config] if a.config else []))

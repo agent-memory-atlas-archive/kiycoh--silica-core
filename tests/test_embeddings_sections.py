@@ -166,7 +166,7 @@ def test_prefixes_reach_the_embedder_on_both_sides(root, monkeypatch):
     assert root.build_index(embed=True)["embeddings"]["embedded"] == 4
     # and until then, a store built under another model or prefix is not served
     monkeypatch.setattr(CONFIG, "embedding_doc_prefix", "search_document: ")
-    assert root.search("car")["dense"] == {"state": "no_vectors", "hint": "run `silica index --embed`"}
+    assert root.search("car")["dense"] == {"state": "no_vectors", "hint": "run `silica-core index --embed`"}
     monkeypatch.setattr(CONFIG, "embedding_doc_prefix", "")
     monkeypatch.setattr(CONFIG, "embedding_model", "other")
     assert root.search("car")["dense"]["state"] == "no_vectors"

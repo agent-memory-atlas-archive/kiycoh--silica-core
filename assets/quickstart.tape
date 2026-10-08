@@ -49,15 +49,15 @@ Type "uv tool uninstall silica-core >/dev/null 2>&1; clear" Enter
 Show
 
 Sleep 700ms
-Type "uv tool install -q 'silica-core[mcp,dense]' && silica --version" Sleep 400ms Enter
+Type "uv tool install -q 'silica-core[mcp,dense]' && silica-core --version" Sleep 400ms Enter
 Wait+Screen@3m /silica \d+\.\d+\.\d+/
 Sleep 1000ms
 
-Type "silica init" Sleep 300ms Enter
+Type "silica-core init" Sleep 300ms Enter
 Wait+Screen@60s /"docs": 9/
 Sleep 1400ms
 
-Type "silica setup claude" Sleep 300ms Enter
+Type "silica-core setup claude" Sleep 300ms Enter
 Wait+Screen@60s /guidance block/
 Sleep 1400ms
 

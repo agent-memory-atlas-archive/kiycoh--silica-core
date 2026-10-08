@@ -38,7 +38,7 @@ docling/opendataloader/mineru take a PDF and nothing else. `pypdfium2` is a
 base dependency; the other three are binaries the user installs, and Silica
 shells out to them exactly as it shells out to soffice, ffmpeg and whisper-cli.
 None of them was ever imported here, which is why the `[pdf]` extra that used to
-install mineru was dropped on 2026-09-02 (`silica doctor` reports its presence).
+install mineru was dropped on 2026-09-02 (`silica-core doctor` reports its presence).
 
 `pdfium` replaced `pymupdf4llm` as the default on 2026-08-31 (ADR-0034). PyMuPDF is AGPL
 or a paid Artifex licence, and the AGPL is what blocked any proprietary
@@ -288,7 +288,7 @@ def convert(target: str, dest_dir: str = "", beside: bool = False) -> list[str]:
     over ``DOC_EXTS``; anything else → ``ValueError``. Side artifacts (extracted
     figures) go to ``<dest_dir>/Images`` when given, else ``<inbox>/Images``.
 
-    ``beside`` (what `silica import` asks for) writes one `.md` next to the
+    ``beside`` (what `silica-core import` asks for) writes one `.md` next to the
     source instead, never segmented: that sidecar is what `silica_read` and
     the index serve in place of the PDF's own text layer, and the sidecar
     lookup is `with_suffix(".md")`, one file.
@@ -1514,7 +1514,7 @@ def _legacy_office_to_pdf(src: Path, workdir: Path) -> Path:
         status, detail = probe_soffice()
         raise ValueError(
             f"LibreOffice timed out after {_SOFFICE_TIMEOUT_S}s converting "
-            f"{src.name} (probe: {status} — {detail}). Run `silica doctor`, or "
+            f"{src.name} (probe: {status} — {detail}). Run `silica-core doctor`, or "
             "re-save the file as PDF"
         ) from None
     pdfs = sorted(out.glob("*.pdf"))

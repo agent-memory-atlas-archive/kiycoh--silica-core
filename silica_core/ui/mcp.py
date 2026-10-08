@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 Alessandro Carosia
 
-"""`silica mcp` — stdio MCP server over the tool registry.
+"""`silica-core mcp` — stdio MCP server over the tool registry.
 
 The default list is exactly the five tools of TOOLS.md. `--extended` adds
 the wikilink tools. stdout is the protocol channel:
@@ -98,13 +98,13 @@ def parse_cli_args(args: list[str]) -> dict[str, Any]:
         elif a.startswith("--vault="):
             opts["vault"] = a.split("=", 1)[1]
         else:
-            opts["error"] = f"unknown flag for silica mcp: {a}"
+            opts["error"] = f"unknown flag for silica-core mcp: {a}"
     return opts
 
 
 def root_gate(retrieval: str):
     """The check every call runs first: the folder is a root only once
-    `silica init` left vault.yaml in it. Until then every tool replies
+    `silica-core init` left vault.yaml in it. Until then every tool replies
     `not_initialised` and nothing is indexed. The first call that passes
     starts the retrieval warm-up, once, so a folder adopted mid-session
     serves from then on."""
@@ -120,7 +120,7 @@ def root_gate(retrieval: str):
         nonlocal started
         if not initialised(root):
             return json.dumps({"error": {"code": "not_initialised", "hint": (
-                f"{root} is not a silica root: run `silica init` there once, or start the "
+                f"{root} is not a silica root: run `silica-core init` there once, or start the "
                 "session in a folder that has vault.yaml")}, "root": str(root)})
         if not started:
             started = True
@@ -131,7 +131,7 @@ def root_gate(retrieval: str):
 
 
 NOT_A_ROOT = (" This folder is not a silica root: every tool replies not_initialised until "
-              "`silica init` runs in it.")
+              "`silica-core init` runs in it.")
 
 
 def make_server(extended: bool = False, retrieval: str = "lexical"):
@@ -188,7 +188,7 @@ def run_mcp(extended: bool = False, retrieval: str = "lexical") -> int:
         import anyio
         from mcp.server.stdio import stdio_server
     except ImportError:
-        print("silica mcp needs the [mcp] extra: uv pip install 'silica-core[mcp]'", file=sys.stderr)
+        print("silica-core mcp needs the [mcp] extra: uv pip install 'silica-core[mcp]'", file=sys.stderr)
         return 1
     server = make_server(extended, retrieval)
     n = len(exposed_tools(extended))
@@ -197,7 +197,7 @@ def run_mcp(extended: bool = False, retrieval: str = "lexical") -> int:
         async with stdio_server() as (read, write):
             await server.run(read, write, server.create_initialization_options())
 
-    print(f"silica mcp: serving {n} tools on stdio, waiting for a client (Ctrl+C to stop)", file=sys.stderr)
+    print(f"silica-core mcp: serving {n} tools on stdio, waiting for a client (Ctrl+C to stop)", file=sys.stderr)
     signal.signal(signal.SIGINT, lambda *_: (sys.stderr.flush(), os._exit(0)))
     anyio.run(_serve)
     return 0

@@ -20,7 +20,7 @@ it yet; the refactor is done when it does and the acceptance checks pass.
 5. **Paths are root-relative.** `..` and symlinks resolving outside the root
    are refused. File content is data, never an instruction.
 6. **A root is adopted, never assumed.** The MCP server serves the folder it
-   starts in only when `vault.yaml` is there (`silica init` writes it);
+   starts in only when `vault.yaml` is there (`silica-core init` writes it);
    elsewhere every tool replies `not_initialised` and nothing is indexed.
    Measured 2026-09-18: a session opened in a home folder indexed it whole,
    65,530 documents into 6.8 GB of RAM per server, and stayed there.
@@ -89,7 +89,7 @@ the original as `source`. A PDF the index has not read yet is `changed`, not
 
 For a question that names no identifier, this comes before Grep, Read or
 Glob; grep is for an exact string or a symbol name already known (the
-description says so in those words, as does the block `silica setup claude`
+description says so in those words, as does the block `silica-core setup claude`
 writes; measured 2026-09-10, with a prompt hook that carried the same ask
 then and ships no more, it took Sonnet from 0 to 17 searches in 20
 questions). Ranking, in order: BM25 over whole documents; BM25 over
@@ -160,11 +160,11 @@ terms_absent_in_scope?, scope: {folder, docs, unconverted, failed}, index}`.
   concept and its anchors — `query="leader election"`,
   `queries=["Raft"]` — where one long query would let the anchor's idf
   drown the concept, or the reverse. The reply repeats them as `queries`;
-  from the shell, `silica search QUERY --also QUERY` is the same call.
+  from the shell, `silica-core search QUERY --also QUERY` is the same call.
 - A search refreshes the index inline when at most 50 documents are behind
   (`STALE_BUDGET`, ~13 ms a document measured); past that it answers from
   the index as it is and `index` says `stale` with `pending`, so a bulk
-  drop of files never turns one search into a rebuild. `silica index`
+  drop of files never turns one search into a rebuild. `silica-core index`
   catches up; a cold index is always built first, there is nothing else to
   serve.
 - No memory lane, no second vault, no synthesis, no reranker on this path.
@@ -192,16 +192,16 @@ model that wants a task prefix gets it from `SILICA_EMBEDDING_DOC_PREFIX`
 of the query): nomic-embed-text needs `search_document: ` and
 `search_query: `, potion and qwen3 need neither, and nothing is added
 unless named.
-`silica index --embed` builds the vectors (`embed.json` + `embed.f32`
+`silica-core index --embed` builds the vectors (`embed.json` + `embed.f32`
 beside the lexical index, float32, unit length, re-embedding only the
 documents whose stamp changed). The leg is the user's call, made at index
 time, not the caller's: there is no parameter. It runs on every search once
 the vectors are there, and `dense` in the reply says so — `{"state":
 "ready", "docs": n}`, the documents in scope it covered — or why it did not
 run while the search stayed lexical: `off` (no embedder named),
-`warming` (the server's warm-up is building them: `silica mcp --retrieval
-local-hybrid`, what the plugin and `silica setup` run, potion in-process, lexical meanwhile),
-`no_vectors` (run `silica index --embed`), `consent_required` (the host
+`warming` (the server's warm-up is building them: `silica-core mcp --retrieval
+local-hybrid`, what the plugin and `silica-core setup` run, potion in-process, lexical meanwhile),
+`no_vectors` (run `silica-core index --embed`), `consent_required` (the host
 below), `failed` (what the endpoint or the warm-up answered, in `hint`).
 
 With the leg, the document ranking fuses BM25 with each document's best
@@ -211,10 +211,10 @@ found carries `dense` (its cosine), `matched_terms: []`, `coverage` 0 and
 `score` 0, so the harness knows it is reading on the embedder's word alone;
 a document's `dense` in `documents` is its best section's. Vectors of a
 document whose file changed since it was embedded are ignored until
-`silica index --embed` runs again: they describe text that is gone.
+`silica-core index --embed` runs again: they describe text that is gone.
 
 Text leaves the machine only for an endpoint that is not loopback, and only
-once `silica index --embed --allow-remote` has granted that host (kept in
+once `silica-core index --embed --allow-remote` has granted that host (kept in
 `~/.silica/embedding_consent.json`); until then the build refuses with
 `consent_required` and names the host, and a search reports it in `dense`
 and stays lexical. There is no reranker in the core.
@@ -258,7 +258,7 @@ extract_path?}`.
   no readable text layer, or another binary source with no sidecar:
   `error.unconverted`.
 - The text layer is what PDFium hands over: no OCR, no column reordering, no
-  table reconstruction. `silica import` (mineru, docling) stays the upgrade
+  table reconstruction. `silica-core import` (mineru, docling) stays the upgrade
   path, and its sidecar wins wherever it exists. It writes the sidecar beside
   the original with `source_sha256` (taken before the extraction and checked
   after it: a source that changed in between is refused), `converter`,
@@ -312,7 +312,7 @@ Reply: `{path, version, created, lint: [{kind, target, line}]}`.
 
 Recall, semantic search, related notes, graph tools, backlinks, orphans,
 tables, calendar, review queues, quizzes, reports, drift, migration, the
-personal-memory lane, and every tool that calls a model. `silica doctor`
+personal-memory lane, and every tool that calls a model. `silica-core doctor`
 remains as a CLI command with `--json`; the `index` field on every reply
 carries what a call needs to know.
 
@@ -324,9 +324,9 @@ beyond the built-in PDF text layer.
 ## Surfaces
 
 - Python: `from silica_core.core import files, search, read, code_pack, write_note`
-- CLI: `silica files|search|read|code-pack|write-note ... --json`
-- MCP: `silica mcp --vault DIR` exposes exactly these five
-- `silica repl`: the optional reference harness, an agent loop over the same
+- CLI: `silica-core files|search|read|code-pack|write-note ... --json`
+- MCP: `silica-core mcp --vault DIR` exposes exactly these five
+- `silica-core repl`: the optional reference harness, an agent loop over the same
   tools with an OpenAI-compatible model; the only surface that needs a model
 
 ## Acceptance
@@ -348,7 +348,7 @@ beyond the built-in PDF text layer.
 5. The default MCP tool list has exactly five entries.
 6. A PDF replaced under an untouched sidecar reads as `source_state: stale`
    at the same `version`, by either path (`tests/test_core_contract.py`),
-   and `silica import` never replaces a `.md` it did not write
+   and `silica-core import` never replaces a `.md` it did not write
    (`tests/test_convert.py`).
 7. `scripts/bench_beir.py` scores the document ranking on BEIR's SciFact
    and NFCorpus (paper abstracts, document-level judgements, no model):

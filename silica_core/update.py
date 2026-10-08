@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 Alessandro Carosia
 
-"""`silica update` — keep the install current, whatever installed it.
+"""`silica-core update` — keep the install current, whatever installed it.
 
 Two install kinds, two upstreams. An editable git checkout (`uv pip install
 -e .`) *is* the running code: updating is a `git pull`, guarded by a post-pull

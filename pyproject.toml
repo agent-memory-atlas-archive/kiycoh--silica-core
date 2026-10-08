@@ -59,11 +59,15 @@ dense = ["model2vec>=0.5", "numpy>=1.26"]
 all = ["silica-core[connect,mcp,dense]"]
 
 [project.scripts]
-silica = "silica_core.entry:main"
-# uvx runs the console script named after the package it was given, and the
-# registry entry in server.json launches `uvx --from silica-core[mcp,dense]
-# silica-core mcp --retrieval local-hybrid`. Without this alias every registry-driven install dies at
-# "executable not found" with the wheel sitting right there.
+# One command, named after the distribution. A `silica` script lived here until
+# 2026-10-06 and collided with silica-harness's own `silica` in any venv holding
+# both: whichever installed last owned the name, so rebuilding this editable
+# checkout turned the harness's `silica --gui` into "unrecognized arguments"
+# (ADR-0067). The name also keeps uvx working: uvx runs the console script
+# named after the package it was given, and server.json launches
+# `uvx --from silica-core[mcp,dense] silica-core mcp --retrieval local-hybrid`.
+# The PyPI shims under packaging/ still carry `silica`, for installs made under
+# the old distribution names.
 silica-core = "silica_core.entry:main"
 
 [project.urls]

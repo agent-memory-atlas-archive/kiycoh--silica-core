@@ -10,7 +10,7 @@ Silica uses [uv](https://github.com/astral-sh/uv). Everything runs through it:
 git clone https://github.com/kiycoh/silica-core.git
 cd silica-core
 uv sync --extra dev --extra mcp   # drop --extra mcp if you don't touch the MCP server
-uv run silica doctor              # sanity-check the environment
+uv run silica-core doctor              # sanity-check the environment
 ```
 
 ## Before you open a PR
