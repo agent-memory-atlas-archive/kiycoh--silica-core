@@ -93,6 +93,9 @@ docs/_build/
 !/docs/harnesses.md
 
 # Silica & Agent Specific
+# Claude Code writes it when it loads this tree as a --plugin-dir mod, beside
+# .claude-plugin/types/, which ignores itself.
+/tsconfig.json
 # .agents/ is local agent tooling, except the Codex plugin marketplace, which
 # Codex looks for at exactly .agents/plugins/marketplace.json.
 /.agents/*
