@@ -45,3 +45,17 @@ def test_no_contract_surface_says_blocked():
     for name, text in surfaces.items():
         assert not re.search(r"\bblocked\b", text, re.I), f"{name} says 'blocked'"
 
+
+def test_the_mod_serves_the_guidance_block_verbatim():
+    # hooks/guidance.ts is generated from guidance.GUIDANCE, so the system-prompt
+    # section the mod adds and the CLAUDE.md block never drift apart
+    import json
+    from pathlib import Path
+    from silica_core.onboarding import guidance as g
+    ts = (Path(__file__).resolve().parent.parent / "hooks" / "guidance.ts").read_text(encoding="utf-8")
+    m = re.search(r"^export const GUIDANCE = (.+)$", ts, re.M)
+    assert m, "hooks/guidance.ts must export GUIDANCE as one JSON string literal"
+    assert json.loads(m.group(1)) == g.GUIDANCE, (
+        "regenerate: python -c \"import json; from silica_core.onboarding.guidance import GUIDANCE; "
+        "print('export const GUIDANCE = ' + json.dumps(GUIDANCE))\" > hooks/guidance.ts")
+    assert g.START in ts, "the marker the mod looks for in CLAUDE.md is exported beside it"
