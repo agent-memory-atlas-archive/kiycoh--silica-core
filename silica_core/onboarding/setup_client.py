@@ -16,13 +16,15 @@ of servers), Agent Zero (a map serialised into a *string* field) and the TOML
 files, which are appended as text.
 
 Never clobbers: an existing silica-core entry is left alone (the user may have tuned
-it), the file is backed up before any write, and `--dry-run` prints what would
+it), but for the one token `_retarget` fixes, the `silica` of an entry written
+before ADR-0067; the file is backed up before any write, and `--dry-run` prints what would
 change. A file that does not parse is refused rather than overwritten.
 """
 from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -393,21 +395,49 @@ def _present(container, kind: str):
     return container.get(NAME)
 
 
-def _already(where: str, entry) -> int:
-    """Report an existing entry, which is never rewritten (module docstring).
-
-    Blocks written before 2026-10-06 launch `silica mcp`, and silica-core no
-    longer installs a `silica` script (ADR-0067). uvx keeps running the cached
-    wheel that still has it until the cache turns over, then the server dies at
-    "executable not found" while this said "nothing to do". Spotted by the argv
-    pair rather than a version, because the entry records none.
-    """
-    if '"silica", "mcp"' in json.dumps(entry, default=str):
-        _say(f"  ⚠ {NAME} in {where} still launches `silica mcp`, a script silica-core no longer "
-             "installs: change that `silica` to `silica-core`, or delete the entry and run this again")
-    else:
-        _say(f"  {NAME} is already configured in {where} — nothing to do")
+def _already(where: str) -> int:
+    """Report an existing, current entry, which is left alone (module docstring)."""
+    _say(f"  {NAME} is already configured in {where} — nothing to do")
     return 0
+
+
+def _retarget(entry, where: str) -> bool:
+    """Point an entry written before 2026-10-06 at `silica-core`, in place.
+
+    Those launch `silica mcp`, and silica-core no longer installs a `silica`
+    script (ADR-0067): uvx keeps running the cached wheel that still has it
+    until the cache turns over, then the server dies at "executable not found".
+    The one rewrite this module makes: that `silica` before `mcp`, inside
+    silica-core's own entry. False when the entry launches nothing older.
+    """
+    found = False
+
+    def walk(node) -> None:
+        nonlocal found
+        if isinstance(node, dict):
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for i, v in enumerate(node):
+                if v == "silica" and node[i + 1:i + 2] == ["mcp"]:
+                    node[i], found = "silica-core", True
+                else:
+                    walk(v)
+
+    walk(entry)
+    if found:
+        _say(f"  ✓ {NAME} in {where} launched `silica mcp`, a script silica-core no longer installs: "
+             "now `silica-core mcp`")
+    return found
+
+
+def _retarget_toml(text: str) -> str:
+    """`_retarget` for the TOML blocks, as text (tomllib reads but cannot write):
+    only silica-core's own table, the Codex one or the OpenHands one naming it."""
+    tables = re.split(r"(?m)^(?=\[)", text)
+    return "".join(s.replace('"silica", "mcp"', '"silica-core", "mcp"')
+                   if s.startswith(f"[mcp_servers.{NAME}]") or f'name = "{NAME}"' in s else s
+                   for s in tables)
 
 
 def _setup_config(spec: Spec, path: Path, dry_run: bool) -> int:
@@ -416,8 +446,9 @@ def _setup_config(spec: Spec, path: Path, dry_run: bool) -> int:
     ponytail: TOML is appended as text rather than re-serialised. tomllib reads
     but cannot write, and a real TOML writer is a dependency for two blocks —
     appending also preserves the comments and ordering a round-trip flattens.
-    The ceiling is that it only ever adds; the day silica has to edit an
-    existing entry is the day tomlkit earns its place.
+    The ceiling is that it only ever adds, but for `_retarget_toml`'s one
+    token; the day silica has to edit more of an existing entry is the day
+    tomlkit earns its place.
     """
     where = escape(str(path))
     existing = path.read_text(encoding="utf-8") if path.exists() else ""
@@ -435,9 +466,10 @@ def _setup_config(spec: Spec, path: Path, dry_run: bool) -> int:
         _say(f"  ✗ {where}: {'.'.join(spec.key)} is not a {spec.kind} — not touching it")
         return 1
     if (entry := _present(container, spec.kind)) is not None:
-        return _already(where, entry)
-
-    if spec.block:
+        if not _retarget(entry, where):
+            return _already(where)
+        block = new = _retarget_toml(existing) if spec.fmt == "toml" else _dump(data, spec.fmt)
+    elif spec.block:
         block = spec.block()
         new = existing + ("" if not existing or existing.endswith("\n") else "\n") + block
     else:
@@ -488,6 +520,7 @@ def _setup_dsh(path: Path, dry_run: bool) -> int:
     was launched from, so on this client the vault is that folder.
     """
     patches: list = []
+    row = None
     existing = path.read_text(encoding="utf-8") if path.exists() else ""
     if existing.strip():
         try:
@@ -500,8 +533,10 @@ def _setup_dsh(path: Path, dry_run: bool) -> int:
             return 1
         rows = [r for p in patches if isinstance(p, dict) for r in p.get("insert") or [] if isinstance(r, dict)]
         if (row := next((r for r in rows if r.get("id") == "mcp-silica-core"), None)) is not None:
-            return _already(escape(str(path)), row)
-    patches.append({"insert": [_dsh_row()]})
+            if not _retarget(row, escape(str(path))):
+                return _already(escape(str(path)))
+    if row is None:
+        patches.append({"insert": [_dsh_row()]})
     block = yaml.safe_dump(patches, sort_keys=False, allow_unicode=True)
     if dry_run:
         return _report(path, block, True, None)
@@ -555,9 +590,10 @@ def _setup_agent_zero(path: Path, dry_run: bool) -> int:
         _say(f'  ✗ {where}: mcp_servers is not a {{"mcpServers": …}} object — not touching it')
         return 1
     if NAME in servers:
-        return _already(where, servers[NAME])
-
-    servers[NAME] = _stdio()
+        if not _retarget(servers[NAME], where):
+            return _already(where)
+    else:
+        servers[NAME] = _stdio()
     settings["mcp_servers"] = json.dumps(config, indent=4)
     block = json.dumps(settings, indent=4) + "\n"
     if dry_run:
@@ -596,6 +632,11 @@ def _setup_claude(dry_run: bool) -> int:
         # middle of it, so pasting runs a fragment.
         _say(f"  {printable}", markup=False, soft_wrap=True)
         return 0
+    # an entry written before ADR-0067 launches `silica mcp`: replaced, not
+    # left to die with uvx's cache (`claude mcp get` exits 0 either way)
+    if " silica mcp" in subprocess.run(["claude", "mcp", "get", NAME], capture_output=True, text=True).stdout:
+        subprocess.run(["claude", "mcp", "remove", "--scope", "user", NAME], capture_output=True, text=True)
+        _say("  ✓ removed the registration that launched `silica mcp`, a script silica-core no longer installs")
     result = subprocess.run(cmd)
     if result.returncode != 0:
         _say(f"  ✗ `{escape(printable)}` failed")

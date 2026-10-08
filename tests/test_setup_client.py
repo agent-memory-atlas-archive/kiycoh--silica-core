@@ -60,20 +60,51 @@ def test_codex_is_idempotent(tmp_path):
     assert cfg.read_text(encoding="utf-8") == once
 
 
-def test_an_entry_that_launches_the_old_script_is_named_not_rewritten(tmp_path):
-    """ADR-0067: blocks written before the rename launch `silica mcp`, which no
-    longer exists once uvx resolves a new wheel. Still never clobbered, but no
-    longer reported as configured either."""
-    cfg = tmp_path / "config.toml"
-    old = ('[mcp_servers.silica-core]\ncommand = "uvx"\n'
-           'args = ["--from", "silica-core[mcp,dense]", "silica", "mcp"]\n')
-    cfg.write_text(old, encoding="utf-8")
-    out = _printed(["codex", "--config", str(cfg)])
-    assert "still launches `silica mcp`" in out and "nothing to do" not in out
-    assert cfg.read_text(encoding="utf-8") == old
+OLD_COMMAND = ["uvx", "--from", "silica-core[mcp,dense]", "silica", "mcp", "--retrieval", "local-hybrid"]
 
-    setup_client.run_setup(["codex", "--config", str(fresh := tmp_path / "fresh.toml")])
-    assert "nothing to do" in _printed(["codex", "--config", str(fresh)])
+
+@pytest.mark.parametrize("client", sorted(setup_client.CLIENTS) + ["dsh", "agent-zero"])
+def test_an_entry_that_launches_the_old_script_is_pointed_at_silica_core(client, tmp_path, monkeypatch):
+    """ADR-0067: entries written before 2026-10-06 launch `silica mcp`, which
+    dies once uvx resolves a wheel without that script. Run again, setup
+    leaves exactly what a fresh setup writes today, and repeats as a no-op."""
+    fresh, old = tmp_path / "fresh", tmp_path / "old"
+    assert setup_client.run_setup([client, "--config", str(fresh)]) == 0
+    with monkeypatch.context() as m:
+        m.setattr(setup_client, "MCP_COMMAND", OLD_COMMAND)
+        assert setup_client.run_setup([client, "--config", str(old)]) == 0
+    assert old.read_text(encoding="utf-8") != fresh.read_text(encoding="utf-8")
+    assert "now `silica-core mcp`" in _printed([client, "--config", str(old)])
+    assert old.read_text(encoding="utf-8") == fresh.read_text(encoding="utf-8")
+    assert "nothing to do" in _printed([client, "--config", str(old)])
+
+
+def test_the_repair_touches_silica_cores_table_and_no_other(tmp_path):
+    # a harness registered as `silica` may launch `silica mcp` on purpose
+    cfg = tmp_path / "config.toml"
+    harness = '[mcp_servers.silica]\ncommand = "uvx"\nargs = ["--from", "silica-harness", "silica", "mcp"]\n'
+    old = ('[mcp_servers.silica-core]\ncommand = "uvx"\n'
+           'args = ["--from", "silica-core[mcp,dense]", "silica", "mcp"]\n\n')
+    cfg.write_text(old + harness, encoding="utf-8")
+    assert setup_client.run_setup(["codex", "--config", str(cfg)]) == 0
+    text = cfg.read_text(encoding="utf-8")
+    assert text == old.replace('"silica", "mcp"', '"silica-core", "mcp"') + harness
+    assert list(tmp_path.glob("config.toml.bak.*"))
+
+
+def test_claude_replaces_an_entry_that_launches_the_old_script(monkeypatch):
+    calls = []
+
+    def run(cmd, **kwargs):
+        calls.append(cmd[:3])
+        out = "silica-core:\n  Command: uvx\n  Args: --from silica-core[mcp,dense] silica mcp --retrieval local-hybrid\n"
+        return setup_client.subprocess.CompletedProcess(cmd, 0, stdout=out if cmd[:3] == ["claude", "mcp", "get"] else "")
+
+    monkeypatch.setattr(setup_client.shutil, "which", lambda name: "/usr/bin/claude")
+    monkeypatch.setattr(setup_client.subprocess, "run", run)
+    monkeypatch.setattr(setup_client, "_write_claude_guidance", lambda dry_run: None)
+    assert setup_client.run_setup(["claude"]) == 0
+    assert calls == [["claude", "mcp", "get"], ["claude", "mcp", "remove"], ["claude", "mcp", "add"]]
 
 
 def test_codex_refuses_broken_toml(tmp_path):

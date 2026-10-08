@@ -47,8 +47,14 @@ are paraphrases that share no words with the text; an exact term or an
 identifier is answered by the lexical leg either way, and only that leg
 reports `terms_absent`.
 
-`pipx` works the same. The package is `silica-core`, the command is
-`silica`, the tools are `silica_*`.
+`pipx` works the same. The package and the command are `silica-core`, the
+tools are `silica_*`.
+
+Upgrading from 0.9 or older: the `silica` command is `silica-core` since
+0.10.0 (`silica` belongs to silica-harness). A client registered by an older
+`silica setup` still launches `silica mcp`, which stops starting once uvx
+fetches 0.10.0. Run `silica-core setup <client>` once and it rewrites that
+entry.
 
 ## Quickstart
 
