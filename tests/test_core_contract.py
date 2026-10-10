@@ -139,6 +139,13 @@ def test_cli_replies_in_utf8_whatever_the_console_encoding(root, tmp_path, monke
     assert "left → right" in out.buffer.getvalue().decode("utf-8")
 
 
+def test_cli_version_names_the_command(capsys):
+    from silica_core.cli import main
+    with pytest.raises(SystemExit):
+        main(["--version"])
+    assert capsys.readouterr().out.startswith("silica-core ")
+
+
 def test_cli_prints_the_tool_reply(root, tmp_path, capsys):
     from silica_core.cli import main
     root.build_index()

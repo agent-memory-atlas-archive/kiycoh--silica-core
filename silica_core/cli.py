@@ -39,7 +39,9 @@ def _parser() -> argparse.ArgumentParser:
 
     p = argparse.ArgumentParser(prog="silica-core", description="Non-LLM retrieval tools for agent harnesses (see TOOLS.md).")
     p.add_argument("--vault", default="", metavar="DIR", help="root folder (default: the folder you run in)")
-    p.add_argument("--version", action="version", version=f"silica {__version__}")
+    # %(prog)s, not a literal: the ADR-0067 rename changed prog above and left
+    # this line printing "silica", the harness's command.
+    p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = p.add_subparsers(dest="cmd")
 
     s = sub.add_parser("files", help="inventory and index state")
