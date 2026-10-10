@@ -189,6 +189,29 @@ summarize, compare, schematize and diagram from the indexed documents), and
 nothing else. Shell recipes,
 Docker and the REPL are in [public/harnesses.md](public/harnesses.md).
 
+## How the Claude Code plugin works
+
+The plugin is an MCP server plus a small mod, `hooks/register.ts`. Neither
+one sends your files, prompts or conversation anywhere.
+
+- **The server** starts with `uv run --frozen --project <plugin folder>`. The
+  first time, uv installs the packages pinned in `uv.lock` from PyPI (and a
+  Python build if the machine has no Python 3.11 or newer), and the server
+  downloads the `potion-retrieval-32M` model from Hugging Face. Nothing else
+  is downloaded.
+- **Indexing.** In a folder that isn't indexed yet, the mod shows an
+  **Index** button above the prompt; `/silica-init` does the same. Either one
+  runs `uv run --project <plugin folder> --extra mcp --extra dense silica-core
+  init` in that folder, which writes `vault.yaml` there (plus `.silicaignore`
+  in a code repository) and builds the index under `~/.silica`. **Not here**
+  hides the button for that folder. Nothing is indexed until you ask.
+- **Search hints.** In an indexed folder, when you ask a question that names
+  no file or symbol, the mod adds one line asking Claude to try
+  `silica_search` before grep. It also adds the search guidance to the system
+  prompt, unless your `CLAUDE.md` already has it. The mod reads three
+  environment variables, `CLAUDE_CONFIG_DIR`, `HOME` and `USERPROFILE`, only
+  to find that `CLAUDE.md` and to skip your home folder.
+
 ## Notes
 
 - **What it reads:** markdown, `.txt`, `.rst` and PDFs with a text layer directly, one PDF page per section; DOCX, EPUB, FB2, RTF, XLS and ODF converted with no extra; scanned PDFs, images, PPTX and XLSX through `silica-core import` with [MinerU](https://github.com/opendatalab/MinerU); audio and video with `ffmpeg` plus `SILICA_STT_BASE_URL`; CSV readable by line, excluded from search. In a source tree the code lane adds source files and their `json`, `yaml`, `toml`, `cfg` and `ini`. `silica-core doctor` says which lanes this machine has.
