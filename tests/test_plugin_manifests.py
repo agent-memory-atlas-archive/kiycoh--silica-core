@@ -43,6 +43,16 @@ def test_both_mcp_files_launch_a_bare_silica_mcp():
     assert [srv["command"], *srv["args"]] == MCP_COMMAND
 
 
+def test_the_plugin_launch_installs_from_the_lockfile():
+    # Anthropic's plugin directory blocks `uv run` without --locked or --frozen
+    # ("Unpinned uvx launcher", plugin pre-submission checklist, 2026-10-11).
+    # --frozen installs what uv.lock says without re-resolving it at each start;
+    # `uv lock --check` before a release is what keeps that lock current.
+    args = json.loads((ROOT / "mcp.json").read_text(encoding="utf-8"))["mcpServers"]["silica-core"]["args"]
+    assert args[0] == "run"
+    assert "--frozen" in args[:args.index("silica-core")]
+
+
 
 
 def test_both_marketplaces_offer_the_same_plugin_from_the_repo_root():
