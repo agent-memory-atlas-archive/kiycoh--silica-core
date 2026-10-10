@@ -5,6 +5,12 @@
   "author": {
     "name": "Alessandro Carosia"
   },
+  "license": "MIT",
+  "icon": "./.claude-plugin/icon.png",
+  "homepage": "https://github.com/kiycoh/silica-core#readme",
+  "repository": "https://github.com/kiycoh/silica-core",
+  "documentationUrl": "https://github.com/kiycoh/silica-core/blob/main/TOOLS.md",
+  "supportUrl": "https://github.com/kiycoh/silica-core/issues",
   "keywords": [
     "retrieval",
     "search",
