@@ -11,6 +11,7 @@
   "repository": "https://github.com/kiycoh/silica-core",
   "documentationUrl": "https://github.com/kiycoh/silica-core/blob/main/TOOLS.md",
   "supportUrl": "https://github.com/kiycoh/silica-core/issues",
+  "privacyPolicyUrl": "https://github.com/kiycoh/silica-core#how-the-claude-code-plugin-works",
   "keywords": [
     "retrieval",
     "search",
