@@ -25,9 +25,9 @@ async function claudeMdHoldsTheBlock($: EngineInterface): Promise<boolean> {
 
 // Lever 5: the folder that holds hooks/ is the plugin root (the module does not
 // see CLAUDE_PLUGIN_ROOT), and init runs through mcp.json's own launch, extras
-// included, so uv never re-syncs the environment the server shares
+// and --frozen included, so uv never re-syncs the environment the server shares
 const PLUGIN_ROOT = decodeURIComponent(new URL('..', import.meta.url).pathname).replace(/\/$/, '').replace(/^\/([A-Za-z]:)/, '$1')
-const INIT = ['uv', 'run', '--project', PLUGIN_ROOT, '--extra', 'mcp', '--extra', 'dense', 'silica-core', 'init']
+const INIT = ['uv', 'run', '--frozen', '--project', PLUGIN_ROOT, '--extra', 'mcp', '--extra', 'dense', 'silica-core', 'init']
 const offer = atom({ plugin: 'silica-core', key: 'offer' } as const, 'hidden')
 
 async function adopt($: EngineInterface): Promise<{ isIndexed: boolean; text: string }> {

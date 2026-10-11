@@ -93,7 +93,9 @@ describe('the index offer', () => {
   const HOME = '/home/u'
   // the plugin root, as the module finds it: the folder that holds hooks/
   const PLUGIN_ROOT = decodeURIComponent(new URL('..', import.meta.url).pathname).replace(/\/$/, '')
-  const INIT = ['uv', 'run', '--project', PLUGIN_ROOT, '--extra', 'mcp', '--extra', 'dense', 'silica-core', 'init']
+  // the launch mcp.json gives the server, --frozen included (434c529), so init
+  // and the server sync one environment from uv.lock
+  const INIT = ['uv', 'run', '--frozen', '--project', PLUGIN_ROOT, '--extra', 'mcp', '--extra', 'dense', 'silica-core', 'init']
   const BAND = { hasSurvey: false, isWorking: false, maxRows: 10, bodyColumns: 80, scroll: { offset: 0, bodyRows: 10 }, view: {} }
 
   // beneath the plugin: a folder (adopted or not), HOME, a store kept in
