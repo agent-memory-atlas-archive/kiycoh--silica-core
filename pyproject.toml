@@ -66,8 +66,9 @@ all = ["silica-core[connect,mcp,dense]"]
 # (ADR-0067). The name also keeps uvx working: uvx runs the console script
 # named after the package it was given, and server.json launches
 # `uvx --from silica-core[mcp,dense] silica-core mcp --retrieval local-hybrid`.
-# The PyPI shims under packaging/ still carry `silica`, for installs made under
-# the old distribution names.
+# The old distribution names silica-agent and silica-harness belong to the
+# harness since 2026-10-10 and only kiycoh/silica-agent can publish them, so
+# the redirect shims that lived under packaging/ were removed on 2026-10-11.
 silica-core = "silica_core.entry:main"
 
 [project.urls]
