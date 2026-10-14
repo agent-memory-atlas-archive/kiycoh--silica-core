@@ -57,7 +57,7 @@ describe('the guidance section', () => {
     on('session.root', () => ({ value: ROOT }))
     on('fs.exists', ($, e) => ({ value: opts.adopted && e.path === `${ROOT}/vault.yaml` }))
     on('env.get', ($, e) => ({ value: env[e.name] }))
-    on('fs.read', ($, e) => (e.path in files ? { value: files[e.path] } : { deny: 'ENOENT' }))
+    on('fs.read', ($, e) => (e.path in files ? { value: files[e.path]! } : { deny: 'ENOENT' }))
     on('prompt.compose', () => ({ sections: ENGINE }))
   }
 
@@ -92,7 +92,7 @@ describe('the guidance section', () => {
 describe('the index offer', () => {
   const HOME = '/home/u'
   // the plugin root, as the module finds it: the folder that holds hooks/
-  const PLUGIN_ROOT = decodeURIComponent(new URL('..', import.meta.url).pathname).replace(/\/$/, '')
+  const PLUGIN_ROOT = decodeURIComponent(new URL('..', (import.meta as { url: string }).url).pathname).replace(/\/$/, '')
   // the launch mcp.json gives the server, --frozen included (434c529), so init
   // and the server sync one environment from uv.lock
   const INIT = ['uv', 'run', '--frozen', '--project', PLUGIN_ROOT, '--extra', 'mcp', '--extra', 'dense', 'silica-core', 'init']
@@ -114,11 +114,11 @@ describe('the index offer', () => {
       runs.push({ argv: e.argv, cwd: e.init?.cwd })
       return { value: { exitCode: opts.exitCode ?? 0, stdout: '{"docs": 3}', stderr: 'no uv', isStdoutTruncated: false, isStderrTruncated: false } }
     })
-    on('command.register', ($, e) => { commands.push(e.name); return { value: undefined } })
+    on('command.register', ($, e) => { commands.push(e.name); return { value: { command: e.name } } })
     on('ui.toast', () => ({ value: undefined }))
     on('session.start', ($, e) => ({ cwd: e.cwd }))
     on('command.run', () => ({ text: '' }))
-    on('ui.render', ($, e) => h($.ui.resolve(e).Box, {}))  // the engine's band: empty
+    on('ui.render', ($, e) => h($.ui.resolve(e).Box, {}) as any)  // the engine's band: empty
     return { runs, commands }
   }
 

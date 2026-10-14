@@ -191,7 +191,7 @@ Docker and the REPL are in [public/harnesses.md](public/harnesses.md).
 
 ## How the Claude Code plugin works
 
-The plugin is an MCP server plus a small mod, `hooks/register.ts`. Neither
+The plugin is an MCP server plus a small mod in `hooks/`. Neither
 one sends your files, prompts or conversation anywhere.
 
 - **The server** starts with `uv run --frozen --project <plugin folder>`. The
@@ -212,6 +212,25 @@ one sends your files, prompts or conversation anywhere.
   prompt, unless your `CLAUDE.md` already has it. The mod reads three
   environment variables, `CLAUDE_CONFIG_DIR`, `HOME` and `USERPROFILE`, only
   to find that `CLAUDE.md` and to skip your home folder.
+- **Docs upkeep.** In an indexed folder with a `docs/` folder, the mod helps
+  Claude keep the docs in step with the code. It asks; Claude decides, and
+  no write is ever refused.
+  - After a write worth recording (a new file, a manifest, 30 changed lines
+    in a turn, or a file an ADR lists), Claude gets one reminder: bring
+    `docs/` up to date, or say there is nothing to record.
+  - When a turn that wrote under `docs/` ends, the mod checks those files
+    for links and code paths that lead nowhere, two ADRs with one number,
+    and an accepted ADR whose Decision changed. Claude fixes what it agrees
+    is a defect or says why it is not; the check asks at most twice a turn.
+  - At the start of an interactive session it reads `docs/adr/` and
+    `docs/specs/` and runs `git`, then shows above the prompt how many
+    records name what is not there and how many have files that changed
+    since. `/silica-docs` lists them.
+  - A record whose frontmatter has `implementation:` (`implemented`,
+    `partial`, `pending`, `draft`, `dropped` or `n/a`) is held to it:
+    `implemented` and `partial` name a commit or a path in `implemented_in`,
+    `pending` and `draft` name none, `partial` and `dropped` carry an
+    `implementation_note`.
 
 ## Notes
 
