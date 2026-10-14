@@ -201,10 +201,11 @@ one sends your files, prompts or conversation anywhere.
   is downloaded.
 - **Indexing.** In a folder that isn't indexed yet, the mod shows an
   **Index** button above the prompt; `/silica-init` does the same. Either one
-  runs `uv run --project <plugin folder> --extra mcp --extra dense silica-core
-  init` in that folder, which writes `vault.yaml` there (plus `.silicaignore`
-  in a code repository) and builds the index under `~/.silica`. **Not here**
-  hides the button for that folder. Nothing is indexed until you ask.
+  runs `uv run --frozen --project <plugin folder> --extra mcp --extra dense
+  silica-core init` in that folder, which writes `vault.yaml` there (plus
+  `.silicaignore` in a code repository) and builds the index under
+  `~/.silica`. **Not here** hides the button for that folder. Nothing is
+  indexed until you ask.
 - **Search hints.** In an indexed folder, when you ask a question that names
   no file or symbol, the mod adds one line asking Claude to try
   `silica_search` before grep. It also adds the search guidance to the system
