@@ -1,5 +1,5 @@
 # The README quickstart: install, connect, ask, get located evidence.
-#   vhs assets/quickstart.tape
+#   vhs scripts/quickstart.tape
 #
 # Records against ~/silica-demo — the nine LSM papers of the two static shots —
 # with CLAUDE_CONFIG_DIR pointed at a throwaway ~/.claude-demo so the take

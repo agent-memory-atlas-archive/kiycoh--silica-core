@@ -2,7 +2,7 @@
 """Emit the two README banners, the favicon both front ends use, and the web
 GUI's one remaining raster.
 
-    python3 assets/build_banners.py
+    python3 scripts/build_banners.py
 
 An SVG loaded as an image (which is what the README does, through GitHub's camo
 proxy) runs in secure static mode and cannot fetch external resources, so
@@ -27,7 +27,7 @@ because this script is run by hand on the one machine that edits the art.
 import re
 from pathlib import Path
 
-HERE = Path(__file__).parent
+HERE = Path(__file__).parent.parent / "assets"
 MARK = "silica-mark.svg"
 MASCOT_PNG = "sili_mascot.png"
 STATIC = HERE.parent / "silica_core" / "ui" / "web" / "static"
@@ -239,7 +239,7 @@ def header_mark() -> str:
     body = re.sub(r'r="([\d.]+)"',
                   lambda m: f'r="{float(m.group(1)) * 1.25:.0f}"', body)
     return ('        <!-- the mark, monochrome, generated from '
-            f'assets/{FAVICON} by assets/build_banners.py -->\n'
+            f'assets/{FAVICON} by scripts/build_banners.py -->\n'
             '        <svg class="brand-mark" viewBox="0 0 512 512" width="20" height="20"'
             ' aria-hidden="true" focusable="false">'
             + body + "</svg>")
